@@ -1,0 +1,40 @@
+{
+  "resourceType": "GMProject",
+  "resourceVersion": "1.7",
+  "name": "MapEditor",
+  "AudioGroups": [
+    {"resourceType":"GMAudioGroup","resourceVersion":"1.3","name":"audiogroup_default","targets":-1,},
+  ],
+  "configs": {
+    "children": [],
+    "name": "Default",
+  },
+  "defaultScriptType": 1,
+  "Folders": [
+    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Core","folderPath":"folders/Core.yy",},
+    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Graphics","folderPath":"folders/Graphics.yy",},
+    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Levels","folderPath":"folders/Levels.yy",},
+  ],
+  "IncludedFiles": [],
+  "isEcma": false,
+  "LibraryEmitters": [],
+  "MetaData": {
+    "IDEVersion": "2023.6.0.92",
+  },
+  "resources": [
+    {"id":{"name":"obj_controller","path":"objects/obj_controller/obj_controller.yy",},},
+    {"id":{"name":"global_utilities","path":"scripts/global_utilities/global_utilities.yy",},},
+    {"id":{"name":"spr_rectangle","path":"sprites/spr_rectangle/spr_rectangle.yy",},},
+    {"id":{"name":"font_gui_small","path":"fonts/font_gui_small/font_gui_small.yy",},},
+    {"id":{"name":"obj_map_tile","path":"objects/obj_map_tile/obj_map_tile.yy",},},
+    {"id":{"name":"spr_map_icons","path":"sprites/spr_map_icons/spr_map_icons.yy",},},
+    {"id":{"name":"spr_map_borders","path":"sprites/spr_map_borders/spr_map_borders.yy",},},
+    {"id":{"name":"rm_main","path":"rooms/rm_main/rm_main.yy",},},
+  ],
+  "RoomOrderNodes": [
+    {"roomId":{"name":"rm_main","path":"rooms/rm_main/rm_main.yy",},},
+  ],
+  "TextureGroups": [
+    {"resourceType":"GMTextureGroup","resourceVersion":"1.3","name":"Default","autocrop":true,"border":2,"compressFormat":"bz2","directory":"","groupParent":null,"isScaled":true,"loadType":"default","mipsToGenerate":0,"targets":-1,},
+  ],
+}

@@ -1,0 +1,1 @@
+if (curState != -1) {curState();}
