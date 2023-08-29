@@ -5,5 +5,5 @@ for (var i = 0; i < _length; i++){
 }
 
 // 
-mouseGuiX = floor((mouse_x - camera_get_view_x(camera)) * (GUI_WIDTH / WINDOW_WIDTH));
-mouseGuiY = floor((mouse_y - camera_get_view_y(camera)) * (GUI_HEIGHT / WINDOW_HEIGHT));
+mouseGuiX = window_mouse_get_x() * (GUI_WIDTH / window_get_width());
+mouseGuiY = window_mouse_get_y() * (GUI_HEIGHT / window_get_height());
