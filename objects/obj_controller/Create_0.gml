@@ -34,7 +34,7 @@ nextState	= -1;
 lastState	= -1;
 flags		= FIRST_BACKSPACE;
 
-//
+// 
 stateFunctions = ds_map_create();
 
 // 
@@ -45,6 +45,8 @@ mStartPanX	= 0;
 mStartPanY	= 0;
 
 // 
+mouseCellX	= 0;
+mouseCellY	= 0;
 mouseGuiX	= 0;
 mouseGuiY	= 0;
 
@@ -68,72 +70,99 @@ totalIconIndexes	= sprite_get_number(spr_map_icons);
 
 // 
 ds_list_add(guiButtons, 
+	// 
+	gui_button_create(2, 2, 31, 9,
+		gui_button_new_file, [],
+		gui_button_draw_general, [
+			gui_button_create_text_struct(17, 3, "New", fa_center, fa_top, c_white),
+			noone
+		],
+		BTN_ENABLED
+	),
+	// 
+	gui_button_create(34, 2, 32, 9,
+		gui_button_load_file, [],
+		gui_button_draw_general, [
+			gui_button_create_text_struct(49, 3, "Load", fa_center, fa_top, c_white),
+			noone
+		],
+		BTN_ENABLED
+	),
+	// 
+	gui_button_create(67, 2, 31, 9,
+		gui_button_save_file, [],
+		gui_button_draw_general, [
+			gui_button_create_text_struct(83, 3, "Save", fa_center, fa_top, c_white),
+			noone
+		],
+		BTN_ENABLED
+	),
 	// Button for displaying on the GUI and adjusting the map's current name (This name is different from the
 	// map's filename, which is chosen by the user when saving said map to an actual ".mm" file).
-	gui_button_create(2, 15, 96, 10,
+	gui_button_create(2, 12, 96, 9,
 		gui_button_select_general_has_input, [
 			STATE_INPUT_MAP_NAME, 5, 16 // Halign, Valign, and color remain unaltered
 		],	
 		gui_button_draw_general, [
-			gui_button_create_text_struct(5, 16, global.mapName, fa_left, fa_top, c_red),
-			gui_button_create_text_struct(50, 6, "Input Map Name", fa_center)
+			gui_button_create_text_struct(5, 13, global.mapName, fa_left, fa_top, c_red),
+			gui_button_create_text_struct(50, 3, "Input Map Name", fa_center)
 		]
 	),
 	// Button for displaying on the GUI and adjusting the map's current width in tiles.
-	gui_button_create(2, 25, 96, 10,
+	gui_button_create(2, 22, 96, 9,
 		gui_button_select_general_has_input, [
 			STATE_INPUT_MAP_WIDTH, 95, 26, fa_right, fa_top, c_yellow
 		], 
 		gui_button_draw_map_dimension, [
-			gui_button_create_text_struct(95, 26, string(global.mapWidth), fa_right, fa_top, c_yellow),
-			gui_button_create_text_struct(5, 16, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
+			gui_button_create_text_struct(95, 23, string(global.mapWidth), fa_right, fa_top, c_yellow),
+			gui_button_create_text_struct(5, 13, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
 			"Width"
 		]
 	),
 	// Button for displaying on the GUI and adjusting the map's current height in tiles.
-	gui_button_create(2, 35, 96, 10,
+	gui_button_create(2, 32, 96, 9,
 		gui_button_select_general_has_input, [
 			STATE_INPUT_MAP_HEIGHT, 95, 36, fa_right, fa_top, c_yellow
 		],
 		gui_button_draw_map_dimension, [
-			gui_button_create_text_struct(95, 36, string(global.mapHeight), fa_right, fa_top, c_yellow),
-			gui_button_create_text_struct(5, 26, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
+			gui_button_create_text_struct(95, 33, string(global.mapHeight), fa_right, fa_top, c_yellow),
+			gui_button_create_text_struct(5, 23, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
 			"Height"
 		]
 	),
 	// 
-	gui_button_create(2, 45, 96, 10,
+	gui_button_create(2, 42, 96, 9,
 		gui_button_select_general, [
 			STATE_DEFAULT
 		],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(5, 46, "Color", fa_left, fa_top, c_white),
+			gui_button_create_text_struct(5, 43, "Color", fa_left, fa_top, c_white),
 			noone
 		],
 		BTN_ENABLED
 	),
 	// Button for displaying the title "Tile". Its main purpose is to switch the current tile palette to the
 	// border tiles, which allows the user to alter what base tile is added to the map when a cell is clicked.
-	gui_button_create(4, 55, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
+	gui_button_create(4, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
 		gui_button_select_general, [
 			STATE_ACTIVATE_BORDERS
 		],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(14, 56, "Tile", fa_center),
+			gui_button_create_text_struct(14, 53, "Tile", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		], 
 		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
 	),
 	// Button for displaying the title "Icon". Its main purpose is to switch the current tile palette to the
 	// icon tiles, which allows the user to alter what icon is added to a tile when placed onto the map grid.
-	gui_button_create(24, 55, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
+	gui_button_create(24, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
 		gui_button_select_general, [
 			STATE_ACTIVATE_ICONS
 		],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(34, 56, "Icon", fa_center),
+			gui_button_create_text_struct(34, 53, "Icon", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
-		], 
+		],
 		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
 	)
 );
@@ -141,7 +170,7 @@ ds_list_add(guiButtons,
 // 
 firstBorderIndex = ds_list_size(guiButtons);
 var _xOffset	 = 6;
-var _yOffset	 = 86;
+var _yOffset	 = 83;
 for (var i = 0; i < totalBorderIndexes; i++){
 	if (i > 0 && i % ICONS_PER_ROW == 0){
 		_xOffset  = 6;
@@ -165,7 +194,7 @@ for (var i = 0; i < totalBorderIndexes; i++){
 // 
 firstIconIndex	= ds_list_size(guiButtons);
 _xOffset		= 6;
-_yOffset		= 86;
+_yOffset		= 83;
 ds_list_add(guiButtons,
 	gui_button_create(
 		_xOffset,
@@ -201,14 +230,14 @@ totalIconIndexes++;
 
 #region Utility Functions
 
-/// @description 
-/// @param {Real}	x				Position along the x axis in the room to create the tile object at.
-/// @param {Real}	y				Position along the y axis in the room to create the tile object at.
+/// @description Creates a new map tile instance at the provided call coordinates. This cell coordiante is
+/// calculated by taking the position passed in as an argument and dividing both values by the width and height
+/// of a map tile; truncating that result to remove the decimal value.
+/// @param {Real}	cellX			Position along the x axis in the room to create the tile object at.
+/// @param {Real}	cellY			Position along the y axis in the room to create the tile object at.
 /// @param {Real}	borderIndex		Value for the subsprite chosen as the tile's border from "spr_map_borders".
 /// @param {Real}	iconIndex		Value for the subsprite chosen as the tile's icon from "spr_map_icons".
-create_map_tile = function(_x, _y, _borderIndex, _iconIndex){
-	var _cellX		= floor(_x / TILE_WIDTH);
-	var _cellY		= floor(_y / TILE_HEIGHT);
+create_map_tile = function(_cellX, _cellY, _borderIndex, _iconIndex){
 	var _instance	= instance_create_depth(_cellX, _cellY, 0, obj_map_tile);
 	with(_instance){
 		x			= _cellX * TILE_WIDTH;
@@ -221,7 +250,9 @@ create_map_tile = function(_x, _y, _borderIndex, _iconIndex){
 	ds_list_add(tileData, _instance);
 }
 
-/// @description 
+/// @description Updates a map tile with new border and icon information; allowing an already placed tile in
+/// the map to be quickly updated instead of the user having to completely remove it to place a new tile that
+/// matches the border/icon setup they desire.
 /// @param {Id.Instance}	tileID		Instance ID for the map tile that will have its border/icon data updated.
 update_map_tile = function(_tileID, _borderIndex, _iconIndex){
 	with(_tileID){
@@ -230,13 +261,44 @@ update_map_tile = function(_tileID, _borderIndex, _iconIndex){
 	}
 }
 
-/// @description 
+/// @description Removes the desired obj_map_tile instance from the current map if the instance ID provided is
+/// found within the ds_list that manages all existing tile objects.
 /// @param {Id.Instance}	tileID		Instance ID for the "obj_map_tile" that will be deleted.
 delete_map_tile = function(_tileID){
 	var _index = ds_list_find_index(tileData, _tileID);
 	if (_index != -1){
 		ds_list_delete(tileData, _index);
 		instance_destroy(_tileID);
+	}
+}
+
+/// @description 
+remove_all_tiles = function(){
+	var _index = ds_list_size(tileData) - 1;
+	while(_index != -1){
+		instance_destroy(tileData[| _index]);
+		ds_list_delete(tileData, _index);
+		_index--;
+	}
+}
+
+/// @description Removes obj_map_tile objects from the current map that exist outside of the current bounds of
+/// the map. A tile is considered outside these bounds if its cell position matches of exceeds either the x
+/// or y cell limits.
+/// @param {Real}	cellLimitX	Total width of the current map bounds in cells.
+/// @param {Real}	cellLimitY	Total height of the current map bounds in cells.
+remove_out_of_bounds_tiles = function(_cellLimitX, _cellLimitY){
+	var _tileData	= tileData;	// Store locally for quick reference within each "obj_map_tile" instance.
+	var _length		= ds_list_size(tileData);
+	for (var i = 0; i < _length; i++){
+		with(tileData[| i]){
+			if (cellX >= _cellLimitX || cellY >= _cellLimitY){
+				ds_list_delete(_tileData, i);
+				instance_destroy(id);
+				_length--;	// Subtract length and i by one to compensate for index delete in middle of list.
+				i--;
+			}
+		}
 	}
 }
 
@@ -250,26 +312,29 @@ process_text_input = function(_inputLimit){
 		if (keyboard_check(vk_backspace)){
 			backspaceTimer--;
 			if (backspaceTimer <= 0){
-				if (IS_FIRST_BACKSPACE){
-					backspaceTimer = FIRST_BSPACE_INTERVAL;
+				if (IS_FIRST_BACKSPACE){ // First backspace waits slightly longer before triggering the faster speed.
+					backspaceTimer =  FIRST_BSPACE_INTERVAL;
 					flags		  &= ~FIRST_BACKSPACE;
-				} else{
+				} else{ // Second backspace and onward uses the faster backspacing speed while held.
 					backspaceTimer = NORM_BSPACE_INTERVAL;
 				}
 				
-				// 
+				// Update the currently visible input by removing the most recent character that was typed in
+				// by the user.
 				with(global.inputText){
 					text = string_delete(text, _length, 1);
 					keyboard_string	= "";
 				}
 			}
+			return;
 		} else{
 			flags |= FIRST_BACKSPACE;
 			backspaceTimer = 0;
 		}
 	}
 	
-	// 
+	// Inputting a new character into the currently stored input text so long as the length of that text
+	// doesn't currently exceed the limit allotted to the current input.
 	if (_length < _inputLimit && keyboard_string != ""){
 		with(global.inputText){
 			text += keyboard_string;
@@ -283,6 +348,19 @@ clear_selected_button = function(){
 	nextState				= lastState;
 	selectedButton.flags   &= ~BTN_SELECTED;
 	selectedButton			= noone;
+}
+
+/// @description 
+/// @param {Real}	startIndex	Starting index within the list of GUI buttons to enable/disable.
+/// @param {Real}	count		Total number of GUI buttons to set to enabled/disabled.
+/// @param {Bool}	enabled		The state to apply to the given region of GUI buttons.
+set_buttons_enabled = function(_startIndex, _count, _enabled){
+	for (var i = 0; i < _count; i++){
+		with(guiButtons[| _startIndex + i]){
+			if (_enabled)	{flags |=  BTN_ENABLED;}
+			else			{flags &= ~BTN_ENABLED;}
+		}
+	}
 }
 
 #endregion
@@ -337,7 +415,7 @@ state_default = function(){
 	if (keyboard_check(vk_shift)){
 		// 
 		if (mouse_check_button(mb_left)){
-			if (_tileEmpty)	{create_map_tile(mouse_x, mouse_y, selectedBorder, selectedIcon);}
+			if (_tileEmpty)	{create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon);}
 			else			{update_map_tile(_tileID, selectedBorder, selectedIcon);}
 			return;
 		}
@@ -350,7 +428,7 @@ state_default = function(){
 
 	// 
 	if (mouse_check_button_released(mb_left)){
-		if (_tileEmpty)	{create_map_tile(mouse_x, mouse_y, selectedBorder, selectedIcon);}
+		if (_tileEmpty)	{create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon);}
 		else			{update_map_tile(_tileID, selectedBorder, selectedIcon);}
 		return;
 	}
@@ -365,6 +443,10 @@ state_within_gui = function(){
 	// 
 	if (mouseGuiX > 100){
 		nextState = state_default;
+		if (mouse_check_button(mb_middle)){
+			mStartPanX = mouse_x;
+			mStartPanY = mouse_y;
+		}
 		return;
 	}
 	
@@ -439,13 +521,17 @@ state_input_map_width = function(){
 	// 
 	if (keyboard_check_pressed(vk_enter)){
 		// 
-		var _prevMapHeight = global.mapWidth;
+		var _prevMapWidth = global.mapWidth;
 		with(global.inputText){
 			text			= string_digits(text);
 			if (text == "") {continue;}
 			global.mapWidth = clamp(real(text), 1, 255);
 			text			= "";
 		}
+		
+		// 
+		if (_prevMapWidth > global.mapWidth)
+			remove_out_of_bounds_tiles(global.mapWidth, 255);
 		
 		// 
 		with(selectedButton)
@@ -459,7 +545,7 @@ state_input_map_width = function(){
 
 /// @description 
 state_input_map_height = function(){
-	//
+	// 
 	if (keyboard_check_pressed(vk_escape)){
 		clear_selected_button();
 		with(global.inputText) {text = "";}
@@ -478,6 +564,10 @@ state_input_map_height = function(){
 		}
 		
 		// 
+		if (_prevMapHeight > global.mapHeight)
+			remove_out_of_bounds_tiles(255, global.mapHeight);
+		
+		// 
 		with(selectedButton)
 			with(drawArgs[0]) {text = string(global.mapHeight);}
 		clear_selected_button();
@@ -490,23 +580,15 @@ state_input_map_height = function(){
 
 /// @description 
 state_activate_border_buttons = function(){
-	for (var i = 0; i < totalBorderIndexes; i++){
-		with(guiButtons[| firstBorderIndex + i]) {flags |= BTN_ENABLED;}
-	}
-	for (var i = 0; i < totalIconIndexes; i++){
-		with(guiButtons[| firstIconIndex + i]) {flags &= ~BTN_ENABLED;}
-	}
+	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, true);
+	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	false);
 	nextState = lastState;
 }
 
 /// @description 
 state_activate_icon_buttons = function(){
-	for (var i = 0; i < totalIconIndexes; i++){
-		with(guiButtons[| firstIconIndex + i]) {flags |= BTN_ENABLED;}
-	}
-	for (var i = 0; i < totalBorderIndexes; i++){
-		with(guiButtons[| firstBorderIndex + i]) {flags &= ~BTN_ENABLED;}
-	}
+	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	true);
+	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, false);
 	nextState = lastState;
 }
 

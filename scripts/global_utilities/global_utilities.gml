@@ -2,13 +2,13 @@
 
 // Store Window dimensions and scaling factor in macros so they can be easily auto-filled instead of having 
 // to remember the values elsewhere in the code.
-#macro	WINDOW_WIDTH			160
-#macro	WINDOW_HEIGHT			120
+#macro	WINDOW_WIDTH			240
+#macro	WINDOW_HEIGHT			135
 #macro	WINDOW_SCALE			6
 
 // 
-#macro	GUI_WIDTH				320
-#macro	GUI_HEIGHT				240
+#macro	GUI_WIDTH				480
+#macro	GUI_HEIGHT				270
 
 // 
 #macro	TILE_WIDTH				8
@@ -26,15 +26,21 @@
 #macro	IS_BTN_HIGHLIGHTED		(flags & BTN_HIGHLIGHTED)
 #macro	IS_BTN_ENABLED			(flags & BTN_ENABLED)
 
+// 
+#macro	MAP_DEFAULT_NAME		"Unnamed Map"
+#macro	MAP_DEFAULT_WIDTH		64
+#macro	MAP_DEFAULT_HEIGHT		64
+
 #endregion
 
 #region Global Variable Initializations
 
 // 
-global.mapName		= "Unnamed Map";
-global.mapWidth		= 64;
-global.mapHeight	= 64;
-global.mapColor		= c_gray;
+global.mapName		= MAP_DEFAULT_NAME;
+global.mapWidth		= MAP_DEFAULT_WIDTH;
+global.mapHeight	= MAP_DEFAULT_HEIGHT;
+global.mapColor		= 0xF87800;
+global.mapAuxColor	= 0x98F858;
 
 // 
 global.inputText	= gui_button_create_text_struct(0, 0, "");
@@ -116,6 +122,111 @@ function gui_button_select_general_has_input(_functionKey, _xPos, _yPos, _hAlign
 		vAlign	= _vAlign;
 		color	= _color;
 	}
+}
+
+/// @description 
+function gui_button_new_file(){
+	// 
+	global.mapName		= MAP_DEFAULT_NAME;
+	global.mapWidth		= MAP_DEFAULT_WIDTH;
+	global.mapHeight	= MAP_DEFAULT_HEIGHT;
+	
+	// 
+	with(obj_controller) {remove_all_tiles();}
+}
+
+/// @description 
+function gui_button_load_file(){
+	// 
+	var _filename = get_open_filename_ext("Metroid Map File|*.mm", "", working_directory + "/saves", "Open an existing map file");
+	if (_filename == "")	{return;}
+	
+	// 
+	var _buffer = buffer_load(_filename);
+	if (_buffer == -1){
+		return;
+	}
+	
+	// 
+	var _json = buffer_read(_buffer, buffer_string);
+	var _data = json_decode(_json);
+	buffer_delete(_buffer);
+	
+	// 
+	global.mapName		= _data[? "name"];
+	global.mapWidth		= _data[? "width"];
+	global.mapHeight	= _data[? "height"];
+	
+	// 
+	var _tiles = _data[? "tiles"];
+	with(obj_controller){
+		remove_all_tiles();
+		var _curTile	= -1; 
+		var _length		= ds_list_size(_tiles);
+		for (var i = 0; i < _length; i++){
+			_curTile = _tiles[| i];
+			create_map_tile(
+				_curTile[? "x"],
+				_curTile[? "y"],
+				_curTile[? "border"],
+				_curTile[? "icon"]
+			);
+		}
+	}
+	
+	// 
+	ds_list_clear(_tiles);
+	ds_map_clear(_data);
+	ds_map_destroy(_data);
+}
+
+/// @description
+function gui_button_save_file(){
+	// 
+	var _filename = get_save_filename_ext("Metroid Map File|*.mm", "untitled.mm", working_directory + "/saves", "Save current map to file");
+	if (_filename == "")	{return;}
+	
+	// 
+	var _data = ds_map_create();
+	ds_map_add(_data, "name",			global.mapName);
+	ds_map_add(_data, "width",			global.mapWidth);
+	ds_map_add(_data, "height",			global.mapHeight);
+	
+	// 
+	var _tiles		= ds_list_create();
+	var _curTile	= ds_map_create();
+	var _index		= 0;
+	with(obj_controller){
+		var _length = ds_list_size(tileData);
+		for (var i = 0; i < _length; i++){
+			with(tileData[| i]){
+				// 
+				ds_map_add(_curTile, "x",		cellX);
+				ds_map_add(_curTile, "y",		cellY);
+				ds_map_add(_curTile, "border",	border);
+				ds_map_add(_curTile, "icon",	icon);
+				
+				// 
+				ds_list_add(_tiles, _curTile);
+				ds_list_mark_as_map(_tiles, _index);
+				_curTile = ds_map_create();
+				_index++;
+			}
+		}
+	}
+	ds_map_add_list(_data, "tiles", _tiles);
+	
+	// 
+	var _json	= json_encode(_data);
+	var _buffer = buffer_create(string_byte_length(_json) + 1, buffer_fixed, 1);
+	buffer_write(_buffer, buffer_string, _json);
+	buffer_save(_buffer, _filename);
+	buffer_delete(_buffer);
+	
+	// 
+	ds_list_clear(_tiles);
+	ds_map_clear(_data);
+	ds_map_destroy(_data);
 }
 
 /// @description 

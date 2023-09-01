@@ -1,10 +1,20 @@
 // 
 draw_sprite_ext(spr_rectangle, 0, 0, 0, 100, GUI_HEIGHT, 0, c_black, 0.75);
-draw_sprite_ext(spr_rectangle, 0, 100, 0, 1, GUI_HEIGHT, 0, c_white, 1.0);
+draw_sprite_ext(spr_rectangle, 0, 100, 0, 1, GUI_HEIGHT - 13, 0, c_white, 1.0);
+draw_sprite_ext(spr_rectangle, 0, 100, GUI_HEIGHT - 12, GUI_WIDTH, 12, 0, c_black, 0.75);
+draw_sprite_ext(spr_rectangle, 0, 100, GUI_HEIGHT - 13, GUI_WIDTH - 100, 1, 0, c_white, 1.0);
 
 // 
-draw_sprite_ext(spr_rectangle, 0, 4, 84, 3 + ((TILE_WIDTH + ICON_SPACING) * ICONS_PER_ROW), 
+draw_sprite_ext(spr_rectangle, 0, 4, 81, 3 + ((TILE_WIDTH + ICON_SPACING) * ICONS_PER_ROW), 
 	3 + ((TILE_HEIGHT + ICON_SPACING) * ICONS_PER_COLUMN), 0, c_dkgray, 0.65);
+
+// 
+draw_set_halign(fa_right);
+draw_set_color(c_gray);
+draw_text(GUI_WIDTH - 2, GUI_HEIGHT - 9, 
+	"(" + string(mouse_x) + " [" + string(mouseCellX) + "], " +
+		  string(mouse_y) + " [" + string(mouseCellY) + "])");
+draw_set_halign(fa_left);
 
 // 
 var _selectedButton = selectedButton;
@@ -37,9 +47,9 @@ with(_selectedButton){
 }
 
 // 
-draw_sprite_ext(spr_rectangle, 0, 6, 65, 16, 16, 0, global.mapColor, 1);
-if (selectedBorder != 1) {draw_sprite_ext(spr_map_borders, selectedBorder, 6, 65, 2, 2, 0, c_white, 1);}
+draw_sprite_ext(spr_rectangle, 0, 6, 62, 16, 16, 0, global.mapColor, 1);
+if (selectedBorder != 1) {draw_sprite_ext(spr_map_borders, selectedBorder, 6, 62, 2, 2, 0, c_white, 1);}
 
 // 
-draw_sprite_ext(spr_rectangle, 0, 26, 65, 16, 16, 0, global.mapColor, 1);
-if (selectedIcon != -1) {draw_sprite_ext(spr_map_icons, selectedIcon, 26, 65, 2, 2, 0, c_white, 1);}
+draw_sprite_ext(spr_rectangle, 0, 26, 62, 16, 16, 0, global.mapColor, 1);
+if (selectedIcon != -1) {draw_sprite_ext(spr_map_icons, selectedIcon, 26, 62, 2, 2, 0, c_white, 1);}

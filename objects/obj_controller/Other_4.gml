@@ -1,7 +1,7 @@
 // Create the camera, set its viewport size, assign it to viewport 0, and enable the rendering of active viewports.
 camera = camera_create();
 camera_set_view_size(camera, WINDOW_WIDTH, WINDOW_HEIGHT);
-camera_set_view_pos(camera, -(WINDOW_WIDTH >> 1), -(WINDOW_HEIGHT >> 1));
+camera_set_view_pos(camera, -54, -4);
 view_set_camera(0, camera);
 view_set_visible(0, true);
 view_enabled = true;
