@@ -8,7 +8,7 @@ view_enabled = true;
 
 // Ensure the GUI layer and the application surface both have a resolution that matches the viewport's dimensions.
 display_set_gui_size(GUI_WIDTH, GUI_HEIGHT);
-surface_resize(application_surface, WINDOW_WIDTH, WINDOW_HEIGHT);
+surface_resize(application_surface, WINDOW_WIDTH * WINDOW_SCALE, WINDOW_HEIGHT * WINDOW_SCALE);
 
 // Scale and resize the program window. On top of that, center it on the primary display.
 var _windowWidth	= WINDOW_WIDTH * WINDOW_SCALE;

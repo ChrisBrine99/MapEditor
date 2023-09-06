@@ -126,19 +126,27 @@ function gui_button_select_general_has_input(_functionKey, _xPos, _yPos, _hAlign
 
 /// @description 
 function gui_button_new_file(){
+	//
+	var _prevWidth	= global.mapWidth;
+	var _prevHeight = global.mapHeight;
+	
 	// 
 	global.mapName		= MAP_DEFAULT_NAME;
 	global.mapWidth		= MAP_DEFAULT_WIDTH;
 	global.mapHeight	= MAP_DEFAULT_HEIGHT;
 	
 	// 
-	with(obj_controller) {remove_all_tiles();}
+	with(obj_controller){
+		if ((_prevWidth != MAP_DEFAULT_WIDTH || _prevHeight != MAP_DEFAULT_HEIGHT) && surface_exists(gridSurf))
+			surface_free(gridSurf);
+		remove_all_tiles();
+	}
 }
 
 /// @description 
 function gui_button_load_file(){
 	// 
-	var _filename = get_open_filename_ext("Metroid Map File|*.mm", "", working_directory + "/saves", "Open an existing map file");
+	var _filename = get_open_filename_ext("GridMap File|*.gmp", "", working_directory + "/saves", "Open an existing map file");
 	if (_filename == "")	{return;}
 	
 	// 
@@ -183,7 +191,7 @@ function gui_button_load_file(){
 /// @description
 function gui_button_save_file(){
 	// 
-	var _filename = get_save_filename_ext("Metroid Map File|*.mm", "untitled.mm", working_directory + "/saves", "Save current map to file");
+	var _filename = get_save_filename_ext("GridMap File|*.gmp", "untitled.gmp", working_directory + "/saves", "Save current map to file");
 	if (_filename == "")	{return;}
 	
 	// 

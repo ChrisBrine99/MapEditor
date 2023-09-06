@@ -12,6 +12,7 @@ draw_sprite_ext(spr_rectangle, 0, 4, 81, 3 + ((TILE_WIDTH + ICON_SPACING) * ICON
 draw_set_halign(fa_right);
 draw_set_color(c_gray);
 draw_text(GUI_WIDTH - 2, GUI_HEIGHT - 9, 
+	"Zoom " + sZoomLevel +
 	"(" + string(mouse_x) + " [" + string(mouseCellX) + "], " +
 		  string(mouse_y) + " [" + string(mouseCellY) + "])");
 draw_set_halign(fa_left);

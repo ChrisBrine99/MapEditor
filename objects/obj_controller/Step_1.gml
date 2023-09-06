@@ -11,3 +11,12 @@ mouseGuiY = window_mouse_get_y() * (GUI_HEIGHT / window_get_height());
 // 
 mouseCellX = floor(mouse_x / TILE_WIDTH);
 mouseCellY = floor(mouse_y / TILE_HEIGHT);
+
+// 
+if (IS_UPDATE_REQUIRED){
+	bufferUpdateTimer -= deltaTime;
+	if (bufferUpdateTimer <= deltaTime){
+		flags &= ~UPDATE_REQUIRED;
+		flags |= UPDATE_SURF_BUFFER;
+	}
+}
