@@ -52,5 +52,5 @@ draw_sprite_ext(spr_rectangle, 0, 6, 62, 16, 16, 0, global.mapColor, 1);
 if (selectedBorder != 1) {draw_sprite_ext(spr_map_borders, selectedBorder, 6, 62, 2, 2, 0, c_white, 1);}
 
 // 
-draw_sprite_ext(spr_rectangle, 0, 26, 62, 16, 16, 0, global.mapColor, 1);
-if (selectedIcon != -1) {draw_sprite_ext(spr_map_icons, selectedIcon, 26, 62, 2, 2, 0, c_white, 1);}
+draw_sprite_ext(spr_rectangle, 0, 27, 62, 16, 16, 0, global.mapColor, 1);
+if (selectedIcon != -1) {draw_sprite_ext(spr_map_icons, selectedIcon, 27, 62, 2, 2, 0, c_white, 1);}

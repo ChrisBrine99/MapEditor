@@ -31,6 +31,11 @@
 #macro	MAP_DEFAULT_WIDTH		64
 #macro	MAP_DEFAULT_HEIGHT		64
 
+//
+#macro	KEY_MAP_NAME			"MapName"
+#macro	KEY_MAP_WIDTH			"MapWidth"
+#macro	KEY_MAP_HEIGHT			"MapHeight"
+
 #endregion
 
 #region Global Variable Initializations
@@ -43,7 +48,8 @@ global.mapColor		= 0xF87800;
 global.mapAuxColor	= 0x98F858;
 
 // 
-global.inputText	= gui_button_create_text_struct(0, 0, "");
+global.textStructs	= ds_map_create();
+global.inputText	= gui_button_create_text_struct("input", 0, 0, "");
 
 #endregion
 
@@ -126,7 +132,7 @@ function gui_button_select_general_has_input(_functionKey, _xPos, _yPos, _hAlign
 
 /// @description 
 function gui_button_new_file(){
-	//
+	// 
 	var _prevWidth	= global.mapWidth;
 	var _prevHeight = global.mapHeight;
 	
@@ -134,6 +140,11 @@ function gui_button_new_file(){
 	global.mapName		= MAP_DEFAULT_NAME;
 	global.mapWidth		= MAP_DEFAULT_WIDTH;
 	global.mapHeight	= MAP_DEFAULT_HEIGHT;
+	
+	// 
+	with(global.textStructs[? KEY_MAP_NAME])	{text = MAP_DEFAULT_NAME;}
+	with(global.textStructs[? KEY_MAP_WIDTH])	{text = MAP_DEFAULT_WIDTH;}
+	with(global.textStructs[? KEY_MAP_HEIGHT])	{text = MAP_DEFAULT_HEIGHT;}
 	
 	// 
 	with(obj_controller){
@@ -161,25 +172,55 @@ function gui_button_load_file(){
 	buffer_delete(_buffer);
 	
 	// 
-	global.mapName		= _data[? "name"];
-	global.mapWidth		= _data[? "width"];
-	global.mapHeight	= _data[? "height"];
+	var _mapName		= _data[? "name"];
+	var _mapWidth		= _data[? "width"];
+	var _mapHeight		= _data[? "height"];
+	global.mapName		= _mapName;
+	global.mapWidth		= _mapWidth;
+	global.mapHeight	= _mapHeight;
+	
+	// 
+	with(global.textStructs[? KEY_MAP_NAME])	{text = _mapName;}
+	with(global.textStructs[? KEY_MAP_WIDTH])	{text = _mapWidth;}
+	with(global.textStructs[? KEY_MAP_HEIGHT])	{text = _mapHeight;}
 	
 	// 
 	var _tiles = _data[? "tiles"];
 	with(obj_controller){
+		// 
+		if (surface_exists(gridSurf)) {surface_free(gridSurf);}
 		remove_all_tiles();
-		var _curTile	= -1; 
+		
+		// 
+		var _curTile	= -1;
+		var _tileX		=  0;
+		var _tileY		=  0;
+		var _tileBorder	= -1;
+		var _tileIcon	= -1;
+		var _tileFlags	=  0;
 		var _length		= ds_list_size(_tiles);
 		for (var i = 0; i < _length; i++){
-			_curTile = _tiles[| i];
+			// 
+			_curTile	= ds_list_find_value(_tiles, i);
+			if (_curTile == -1) {continue;}
+			
+			// 
+			_tileX		= _curTile[? "x"];
+			_tileY		= _curTile[? "y"];
+			_tileBorder	= _curTile[? "border"];
+			_tileIcon	= _curTile[? "icon"];
+			_tileFlags	= _curTile[? "flags"];
+			
+			// 
 			create_map_tile(
-				_curTile[? "x"],
-				_curTile[? "y"],
-				_curTile[? "border"],
-				_curTile[? "icon"]
+				is_undefined(_tileX)		?  0 : _tileX,
+				is_undefined(_tileY)		?  0 : _tileY,
+				is_undefined(_tileBorder)	? -1 : _tileBorder,
+				is_undefined(_tileIcon)		? -1 : _tileIcon,
+				is_undefined(_tileFlags)	?  0 : _tileFlags
 			);
 		}
+		build_tile_surface(_mapWidth, _mapHeight);
 	}
 	
 	// 
@@ -213,6 +254,7 @@ function gui_button_save_file(){
 				ds_map_add(_curTile, "y",		cellY);
 				ds_map_add(_curTile, "border",	border);
 				ds_map_add(_curTile, "icon",	icon);
+				ds_map_add(_curTile, "flags",	flags);
 				
 				// 
 				ds_list_add(_tiles, _curTile);
@@ -256,6 +298,7 @@ function gui_button_select_map_icons(_iconID){
 /// @description Creates a generic "text" struct, which contains information that can/should be used to draw
 /// the text onto the screen. It is primarily for GUI Buttons, but can also be used in other contexts if a
 /// struct to manage a text's properties is required elsewhere.
+/// @param {Any}				key		Unique identifier for the text struct within the ds_map of text struct instances.
 /// @param {Real}				x		Position of the text along the x axis of the GUI layer.
 /// @param {Real}				y		Position of the text along the y axis of the GUI layer.
 /// @param {String}				text	String that will be rendered using the structs other properties.
@@ -263,8 +306,10 @@ function gui_button_select_map_icons(_iconID){
 /// @param {Constant.VAlign}	vAlign	(Optional) Vertical alignment of the text relative to its y position.
 /// @param {Real}				color	(Optional) Color to be used when rendering the text onto the screen.
 /// @param {Asset.GMFont}		font	(Optional) Font to be used when rendering the text onto the screen.
-function gui_button_create_text_struct(_x, _y, _text, _hAlign = fa_left, _vAlign = fa_top, _color = c_white, _font = font_gui_small){
-	return {
+function gui_button_create_text_struct(_key, _x, _y, _text, _hAlign = fa_left, _vAlign = fa_top, _color = c_white, _font = font_gui_small){
+	if (!is_undefined(ds_map_find_value(global.textStructs, _key)))
+		return noone;
+	var _instance = {
 		x		: _x,
 		y		: _y,
 		text	: _text,
@@ -273,6 +318,8 @@ function gui_button_create_text_struct(_x, _y, _text, _hAlign = fa_left, _vAlign
 		color	: _color,
 		font	: _font
 	};
+	ds_map_add(global.textStructs, _key, _instance);
+	return _instance;
 }
 
 /// @description General function for rendering text to a GUI Button struct. It allows the user to set a font,

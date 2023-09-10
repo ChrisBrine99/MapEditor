@@ -18,10 +18,11 @@
 #macro	STATE_INPUT_MAP_HEIGHT	"InputMapHeight"
 #macro	STATE_ACTIVATE_BORDERS	"ActivateBorders"
 #macro	STATE_ACTIVATE_ICONS	"ActivateIcons"
+#macro	STATE_ACTIVATE_DOORS	"ActivateDoors"
 
 //
 #macro	MAX_ZOOM_LEVEL			6.0
-#macro	MIN_ZOOM_LEVEL			0.25
+#macro	MIN_ZOOM_LEVEL			0.5
 
 // 
 #macro	FIRST_BSPACE_INTERVAL	15.0
@@ -31,6 +32,9 @@
 #macro	ICONS_PER_ROW			10
 #macro	ICONS_PER_COLUMN		15
 #macro	ICON_SPACING			1
+
+// 
+#macro	MAX_DOORS_PER_TILE		4
 
 #endregion
 
@@ -87,6 +91,7 @@ firstBorderIndex	= 0;
 totalBorderIndexes	= sprite_get_number(spr_map_borders) - 1;
 firstIconIndex		= 0;
 totalIconIndexes	= sprite_get_number(spr_map_icons);
+firstDoorIndex		= 0;
 
 // 
 ds_list_add(guiButtons, 
@@ -94,7 +99,7 @@ ds_list_add(guiButtons,
 	gui_button_create(2, 2, 31, 9,
 		gui_button_new_file, [],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(17, 3, "New", fa_center, fa_top, c_white),
+			gui_button_create_text_struct("New", 17, 3, "New", fa_center, fa_top, c_white),
 			noone
 		],
 		BTN_ENABLED
@@ -103,7 +108,7 @@ ds_list_add(guiButtons,
 	gui_button_create(34, 2, 32, 9,
 		gui_button_load_file, [],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(49, 3, "Load", fa_center, fa_top, c_white),
+			gui_button_create_text_struct("Load", 49, 3, "Load", fa_center, fa_top, c_white),
 			noone
 		],
 		BTN_ENABLED
@@ -112,7 +117,7 @@ ds_list_add(guiButtons,
 	gui_button_create(67, 2, 31, 9,
 		gui_button_save_file, [],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(83, 3, "Save", fa_center, fa_top, c_white),
+			gui_button_create_text_struct("Save", 83, 3, "Save", fa_center, fa_top, c_white),
 			noone
 		],
 		BTN_ENABLED
@@ -124,8 +129,8 @@ ds_list_add(guiButtons,
 			STATE_INPUT_MAP_NAME, 5, 13 // Halign, Valign, and color remain unaltered
 		],	
 		gui_button_draw_general, [
-			gui_button_create_text_struct(5, 13, global.mapName, fa_left, fa_top, c_red),
-			gui_button_create_text_struct(50, 3, "Input Map Name", fa_center)
+			gui_button_create_text_struct("MapName", 5, 13, global.mapName, fa_left, fa_top, c_red),
+			gui_button_create_text_struct("MapNameInfo", 50, 3, "Input Map Name", fa_center)
 		]
 	),
 	// Button for displaying on the GUI and adjusting the map's current width in tiles.
@@ -134,8 +139,8 @@ ds_list_add(guiButtons,
 			STATE_INPUT_MAP_WIDTH, 95, 23, fa_right, fa_top, c_yellow
 		], 
 		gui_button_draw_map_dimension, [
-			gui_button_create_text_struct(95, 23, string(global.mapWidth), fa_right, fa_top, c_yellow),
-			gui_button_create_text_struct(5, 13, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
+			gui_button_create_text_struct("MapWidth", 95, 23, string(global.mapWidth), fa_right, fa_top, c_yellow),
+			gui_button_create_text_struct("MapWidthInfo", 5, 13, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
 			"Width"
 		]
 	),
@@ -145,8 +150,8 @@ ds_list_add(guiButtons,
 			STATE_INPUT_MAP_HEIGHT, 95, 33, fa_right, fa_top, c_yellow
 		],
 		gui_button_draw_map_dimension, [
-			gui_button_create_text_struct(95, 33, string(global.mapHeight), fa_right, fa_top, c_yellow),
-			gui_button_create_text_struct(5, 23, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
+			gui_button_create_text_struct("MapHeight", 95, 33, string(global.mapHeight), fa_right, fa_top, c_yellow),
+			gui_button_create_text_struct("MapHeightInfo", 5, 23, "Enter Value (1 - 255)", fa_left, fa_top, c_red),
 			"Height"
 		]
 	),
@@ -157,23 +162,45 @@ ds_list_add(guiButtons,
 			STATE_ACTIVATE_BORDERS
 		],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(14, 53, "Tile", fa_center),
+			gui_button_create_text_struct("Tile", 14, 53, "Tile", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		], 
 		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
 	),
 	// Button for displaying the title "Icon". Its main purpose is to switch the current tile palette to the
 	// icon tiles, which allows the user to alter what icon is added to a tile when placed onto the map grid.
-	gui_button_create(24, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
+	gui_button_create(25, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
 		gui_button_select_general, [
 			STATE_ACTIVATE_ICONS
 		],
 		gui_button_draw_general, [
-			gui_button_create_text_struct(34, 53, "Icon", fa_center),
+			gui_button_create_text_struct("Icon", 35, 53, "Icon", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
 		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
-	)
+	),
+	// 
+	gui_button_create(46, 57, 52, 9,
+		gui_button_select_general, [
+			STATE_ACTIVATE_DOORS
+		],
+		gui_button_draw_general, [
+			gui_button_create_text_struct("Doors", 72, 58, "Doors", fa_center),
+			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
+		],
+		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
+	),
+	//
+	gui_button_create(46, 67, 52, 9,
+		gui_button_select_general, [
+			STATE_DEFAULT
+		], 
+		gui_button_draw_general, [
+			gui_button_create_text_struct("Flags", 72, 68, "Flags", fa_center),
+			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
+		],
+		BTN_ENABLED // This override removes default flag setup that allows button to be selected. 
+	),
 );
 
 // Loop through all the "frames" found within "spr_map_borders"; creating a GUI button for each one that the
@@ -247,6 +274,9 @@ for (var j = 0; j < totalIconIndexes; j++){
 // button for each image found within "spr_map_icons". Otherwise, the last icon wouldn't appear to the user
 // for selection when they open the icon section menu.
 totalIconIndexes++;
+
+// 
+firstDoorIndex = ds_list_size(guiButtons);
 
 #endregion
 
@@ -331,7 +361,8 @@ remove_tile_from_surface = function(_tileID){
 /// @param {Real}	cellY			Position along the y axis in the room to create the tile object at.
 /// @param {Real}	borderIndex		Value for the subsprite chosen as the tile's border from "spr_map_borders".
 /// @param {Real}	iconIndex		Value for the subsprite chosen as the tile's icon from "spr_map_icons".
-create_map_tile = function(_cellX, _cellY, _borderIndex, _iconIndex){
+/// @param {Real}	flags			Flags that determine how the map tile appears in-game and within the editor.
+create_map_tile = function(_cellX, _cellY, _borderIndex, _iconIndex, _flags){
 	var _instance	= instance_create_depth(_cellX, _cellY, 0, obj_map_tile);
 	with(_instance){
 		x			= _cellX * TILE_WIDTH;
@@ -342,7 +373,6 @@ create_map_tile = function(_cellX, _cellY, _borderIndex, _iconIndex){
 		cellY		= _cellY;
 	}
 	ds_list_add(tileData, _instance);
-	update_tile_surface(_instance);
 }
 
 /// @description Updates a map tile with new border and icon information; allowing an already placed tile in
@@ -350,19 +380,10 @@ create_map_tile = function(_cellX, _cellY, _borderIndex, _iconIndex){
 /// matches the border/icon setup they desire.
 /// @param {Id.Instance}	tileID		Instance ID for the map tile that will have its border/icon data updated.
 update_map_tile = function(_tileID, _borderIndex, _iconIndex){
-	var _updateSurface = true;
 	with(_tileID){
-		if (border == _borderIndex && icon == _iconIndex){
-			_updateSurface = false;
-			return;
-		}
-		
 		border	= _borderIndex;
 		icon	= _iconIndex;
 	}
-	
-	// 
-	if (_updateSurface) {update_tile_surface(_tileID);}
 }
 
 /// @description Removes the desired obj_map_tile instance from the current map if the instance ID provided is
@@ -491,7 +512,10 @@ clear_selected_button = function(){
 /// @param {Real}	count		Total number of GUI buttons to set to enabled/disabled.
 /// @param {Bool}	enabled		The state to apply to the given region of GUI buttons.
 set_buttons_enabled = function(_startIndex, _count, _enabled){
+	var _length = ds_list_size(guiButtons);
 	for (var i = 0; i < _count; i++){
+		if (_startIndex + i > _length)
+			return;
 		with(guiButtons[| _startIndex + i]){
 			if (_enabled)	{flags |=  BTN_ENABLED;}
 			else			{flags &= ~BTN_ENABLED;}
@@ -557,6 +581,7 @@ state_default = function(){
 		if (mouse_check_button(mb_left)){
 			if (_tileEmpty)	{create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon);}
 			else			{update_map_tile(_tileID, selectedBorder, selectedIcon);}
+			update_tile_surface(_tileID);
 			return;
 		}
 	
@@ -568,8 +593,9 @@ state_default = function(){
 
 	// 
 	if (mouse_check_button_released(mb_left)){
-		if (_tileEmpty)	{create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon);}
+		if (_tileEmpty)	{create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon);} 
 		else			{update_map_tile(_tileID, selectedBorder, selectedIcon);}
+		update_tile_surface(_tileID);
 		return;
 	}
 
@@ -742,12 +768,22 @@ state_input_map_height = function(){
 state_activate_border_buttons = function(){
 	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, true);
 	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	false);
+	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE, false);
 	nextState = lastState;
 }
 
 /// @description 
 state_activate_icon_buttons = function(){
 	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	true);
+	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, false);
+	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE, false);
+	nextState = lastState;
+}
+
+/// @description 
+state_activate_door_buttons = function(){
+	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE, true);
+	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	false);
 	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, false);
 	nextState = lastState;
 }
@@ -762,6 +798,7 @@ ds_map_add(stateFunctions, STATE_INPUT_MAP_WIDTH,	state_input_map_width);
 ds_map_add(stateFunctions, STATE_INPUT_MAP_HEIGHT,	state_input_map_height);
 ds_map_add(stateFunctions, STATE_ACTIVATE_BORDERS,	state_activate_border_buttons);
 ds_map_add(stateFunctions, STATE_ACTIVATE_ICONS,	state_activate_icon_buttons);
+ds_map_add(stateFunctions, STATE_ACTIVATE_DOORS,	state_activate_door_buttons);
 
 // 
 nextState = state_default;
