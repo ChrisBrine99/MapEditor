@@ -19,12 +19,14 @@
   "isEcma": false,
   "LibraryEmitters": [],
   "MetaData": {
-    "IDEVersion": "2023.8.0.98",
+    "IDEVersion": "2023.11.1.129",
   },
   "resources": [
+    {"id":{"name":"font_gui_medium","path":"fonts/font_gui_medium/font_gui_medium.yy",},},
     {"id":{"name":"obj_controller","path":"objects/obj_controller/obj_controller.yy",},},
     {"id":{"name":"global_utilities","path":"scripts/global_utilities/global_utilities.yy",},},
     {"id":{"name":"spr_rectangle","path":"sprites/spr_rectangle/spr_rectangle.yy",},},
+    {"id":{"name":"spr_checkbox","path":"sprites/spr_checkbox/spr_checkbox.yy",},},
     {"id":{"name":"font_gui_small","path":"fonts/font_gui_small/font_gui_small.yy",},},
     {"id":{"name":"obj_map_tile","path":"objects/obj_map_tile/obj_map_tile.yy",},},
     {"id":{"name":"spr_map_icons","path":"sprites/spr_map_icons/spr_map_icons.yy",},},

@@ -1,16 +1,25 @@
 #region "obj_controller" Specific Macro Initialization
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	FIRST_BACKSPACE			0x00000001
 #macro	UPDATE_REQUIRED			0x00000002
 #macro	UPDATE_SURF_BUFFER		0x00000004
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	IS_FIRST_BACKSPACE		flags & FIRST_BACKSPACE
 #macro	IS_UPDATE_REQUIRED		flags & UPDATE_REQUIRED
 #macro	CAN_UPDATE_SURF_BUFFER	flags & UPDATE_SURF_BUFFER
 
-//
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	STATE_DEFAULT			"Default"
 #macro	STATE_INSIDE_GUI		"InsideGUI"
 #macro	STATE_INPUT_MAP_NAME	"InputMapName"
@@ -19,22 +28,44 @@
 #macro	STATE_ACTIVATE_BORDERS	"ActivateBorders"
 #macro	STATE_ACTIVATE_ICONS	"ActivateIcons"
 #macro	STATE_ACTIVATE_DOORS	"ActivateDoors"
+#macro	STATE_ACTIVATE_FLAGS	"ActivateFlags"
 
-//
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	MAX_ZOOM_LEVEL			6.0
 #macro	MIN_ZOOM_LEVEL			0.5
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	FIRST_BSPACE_INTERVAL	15.0
 #macro	NORM_BSPACE_INTERVAL	4.0
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	ICONS_PER_ROW			10
 #macro	ICONS_PER_COLUMN		15
 #macro	ICON_SPACING			1
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	MAX_DOORS_PER_TILE		4
+#macro	MAX_UNDO_COMMANDS		256
+#macro	MAX_HISTORY_SIZE		256
+
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
+#macro	GUI_REGION_X_START		101
+#macro	GUI_REGION_Y_START		256
 
 #endregion
 
@@ -45,10 +76,14 @@ curState	= -1;
 nextState	= -1;
 lastState	= -1;
 flags		= FIRST_BACKSPACE;
-deltaTime	= 0.0;
+deltaTime	= 0.0;						// Tracks difference in time (1.0 ~ 60 updates per second) between frames.
 
 // 
-stateFunctions = ds_map_create();
+stateFunctions	= ds_map_create();
+
+// 
+undoCommands	= ds_list_create();
+history			= ds_list_create();
 
 // 
 gridSurf		= -1;
@@ -81,6 +116,7 @@ guiButtons			= ds_list_create();
 selectedButton		= noone;
 selectedBorder		= 1;
 selectedIcon		= -1;
+selectedFlags		= HIDDEN_AREA;
 
 // 
 backspaceTimer		= 0.0;
@@ -102,7 +138,7 @@ ds_list_add(guiButtons,
 			gui_button_create_text_struct("New", 17, 3, "New", fa_center, fa_top, c_white),
 			noone
 		],
-		BTN_ENABLED
+		BTN_ENABLED | BTN_CAN_HIGHLIGHT
 	),
 	// 
 	gui_button_create(34, 2, 32, 9,
@@ -111,7 +147,7 @@ ds_list_add(guiButtons,
 			gui_button_create_text_struct("Load", 49, 3, "Load", fa_center, fa_top, c_white),
 			noone
 		],
-		BTN_ENABLED
+		BTN_ENABLED | BTN_CAN_HIGHLIGHT
 	),
 	// 
 	gui_button_create(67, 2, 31, 9,
@@ -120,7 +156,7 @@ ds_list_add(guiButtons,
 			gui_button_create_text_struct("Save", 83, 3, "Save", fa_center, fa_top, c_white),
 			noone
 		],
-		BTN_ENABLED
+		BTN_ENABLED | BTN_CAN_HIGHLIGHT
 	),
 	// Button for displaying on the GUI and adjusting the map's current name (This name is different from the
 	// map's filename, which is chosen by the user when saving said map to an actual ".mm" file).
@@ -165,7 +201,8 @@ ds_list_add(guiButtons,
 			gui_button_create_text_struct("Tile", 14, 53, "Tile", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		], 
-		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
+		// This override removes default flag setup that allows button to be selected. 
+		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
 	),
 	// Button for displaying the title "Icon". Its main purpose is to switch the current tile palette to the
 	// icon tiles, which allows the user to alter what icon is added to a tile when placed onto the map grid.
@@ -177,7 +214,8 @@ ds_list_add(guiButtons,
 			gui_button_create_text_struct("Icon", 35, 53, "Icon", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
-		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
+		// This override removes default flag setup that allows button to be selected. 
+		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
 	),
 	// 
 	gui_button_create(46, 57, 52, 9,
@@ -188,18 +226,20 @@ ds_list_add(guiButtons,
 			gui_button_create_text_struct("Doors", 72, 58, "Doors", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
-		BTN_ENABLED	// This override removes default flag setup that allows button to be selected. 
+		// This override removes default flag setup that allows button to be selected. 
+		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
 	),
 	//
 	gui_button_create(46, 67, 52, 9,
 		gui_button_select_general, [
-			STATE_DEFAULT
+			STATE_ACTIVATE_FLAGS
 		], 
 		gui_button_draw_general, [
 			gui_button_create_text_struct("Flags", 72, 68, "Flags", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
-		BTN_ENABLED // This override removes default flag setup that allows button to be selected. 
+		// This override removes default flag setup that allows button to be selected. 
+		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
 	),
 );
 
@@ -228,7 +268,8 @@ for (var i = 0; i < totalBorderIndexes; i++){
 			TILE_HEIGHT,
 			gui_button_select_map_borders,	[i + 1],
 			gui_button_draw_tile_image,		[spr_map_borders, i + 1],
-			BTN_ENABLED
+			// This override removes default flag setup that allows button to be selected. 
+			BTN_ENABLED | BTN_CAN_HIGHLIGHT
 		)
 	);
 	_xOffset += TILE_WIDTH + ICON_SPACING;
@@ -248,7 +289,7 @@ ds_list_add(guiButtons,
 		TILE_HEIGHT,
 		gui_button_select_map_icons,	[-1],
 		gui_button_draw_tile_image,		[-1, -1],
-		0 // These buttons are all disabled by default.
+		BTN_CAN_HIGHLIGHT // These buttons are all disabled by default.
 	)
 );
 
@@ -265,7 +306,7 @@ for (var j = 0; j < totalIconIndexes; j++){
 			TILE_HEIGHT,
 			gui_button_select_map_icons,	[j],
 			gui_button_draw_tile_image,		[spr_map_icons, j],
-			0 // These buttons are all disabled by default.
+			BTN_CAN_HIGHLIGHT // These buttons are all disabled by default.
 		)
 	);
 	_xOffset += TILE_WIDTH + ICON_SPACING;
@@ -276,7 +317,81 @@ for (var j = 0; j < totalIconIndexes; j++){
 totalIconIndexes++;
 
 // 
-firstDoorIndex = ds_list_size(guiButtons);
+var _doorDirection	= ["North", "East", "South", "West"];
+var _buttonHeight	= floor(TILE_HEIGHT * 3.7) + 1;
+
+// 
+firstDoorIndex	= ds_list_size(guiButtons);
+_yOffset		= 88;
+for (var k = 0; k < MAX_DOORS_PER_TILE; k++){
+	ds_list_add(guiButtons, 
+		gui_button_create(86, _yOffset + 2, TILE_WIDTH, TILE_HEIGHT, 
+			gui_button_select_toggle, [],
+			gui_button_draw_door_info, [
+				5,							// X
+				_yOffset,					// Y
+				GUI_REGION_X_START - 10,	// Width
+				_buttonHeight,				// Height
+				_doorDirection[k],			// Direction Text
+				noone	// An "Input Text Struct" header isn't required, so this can be left blank.
+			],
+			0 // These buttons are all disabled by default.
+		)
+	);
+	_yOffset += _buttonHeight + ICON_SPACING;
+}
+
+#endregion
+
+#region Undo/Redo Command Functions
+
+/// @description 
+/// @param {Function}		function	
+/// @param {Array<Any>}		args		
+add_undo_command = function(_function, _args){
+	// If the newly added command will cause the current list of commands to exceed the limit of 256 actions,
+	// the oldest action in the list will be discarded to make room for the new command's information.
+	if (ds_list_size(undoCommands) == MAX_UNDO_COMMANDS)
+		ds_list_delete(undoCommands, 0);
+		
+	// Add the undo command and its arguments to an a simple struct.
+	ds_list_add(undoCommands, {
+		func	:	method_get_index(_function),
+		args	:	_args,
+	});
+}
+
+/// @description 
+/// @param {Real}	border		
+/// @param {Real}	icon		
+set_undo_selected_border_and_icon = function(_border, _icon){
+	add_redo_command(set_redo_selected_border_and_icon, [selectedBorder, selectedIcon]);
+	selectedBorder	= _border;
+	selectedIcon	= _icon;
+}
+
+#endregion
+
+#region Input Functions
+
+/// @description 
+/// @param {Id.Instance}	tileID
+mouse_left_pressed_on_map = function(_tileID){
+	if (_tileID == noone){
+		_tileID = create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon, selectedFlags);
+		//add_undo_command(delete_map_tile, [_tileID]);
+	} else{
+		/*var _border = -1;
+		var _icon	= -1;
+		with(_tileID){
+			_border = border;
+			_icon	= icon;
+		}*/
+		//add_undo_command(update_map_tile, [_tileID, _border, _icon]);
+		update_map_tile(_tileID, selectedBorder, selectedIcon, selectedFlags);
+	}
+	update_tile_surface(_tileID);
+}
 
 #endregion
 
@@ -312,7 +427,8 @@ build_tile_surface = function(_width, _height){
 	else {surface_resize(tileSurf, _width * TILE_WIDTH, _height * TILE_HEIGHT);}
 	
 	// 
-	if (instance_number(obj_map_tile) == 0) {return;}
+	if (instance_number(obj_map_tile) == 0) 
+		return;
 	
 	// 
 	var _bufferSize = _width * TILE_WIDTH * _height * TILE_HEIGHT * 4;
@@ -336,7 +452,7 @@ update_tile_surface = function(_tileID){
 	
 	// 
 	flags |= UPDATE_REQUIRED;
-	bufferUpdateTimer = 15;
+	bufferUpdateTimer = 15.0;
 }
 
 /// @description 
@@ -351,7 +467,7 @@ remove_tile_from_surface = function(_tileID){
 	
 	// 
 	flags |= UPDATE_REQUIRED;
-	bufferUpdateTimer = 15;
+	bufferUpdateTimer = 15.0;
 }
 
 /// @description Creates a new map tile instance at the provided call coordinates. This cell coordiante is
@@ -371,8 +487,11 @@ create_map_tile = function(_cellX, _cellY, _borderIndex, _iconIndex, _flags){
 		icon		= _iconIndex;
 		cellX		= _cellX;
 		cellY		= _cellY;
+		flags		= _flags;
 	}
+	//add_undo_command(remove_tile_from_surface, [_instance]);
 	ds_list_add(tileData, _instance);
+	return _instance;
 }
 
 /// @description Updates a map tile with new border and icon information; allowing an already placed tile in
@@ -531,7 +650,7 @@ set_buttons_enabled = function(_startIndex, _count, _enabled){
 state_default = function(){
 	// 
 	var _mMiddleHeld = mouse_check_button(mb_middle);
-	if (!_mMiddleHeld && mouseGuiX <= 100){
+	if (!_mMiddleHeld && (mouseGuiX <= GUI_REGION_X_START || mouseGuiY >= GUI_REGION_Y_START)){
 		nextState = state_within_gui;
 		return;
 	}
@@ -558,9 +677,10 @@ state_default = function(){
 	// 
 	if (mouse_x < 0 || mouse_y < 0 || mouse_x >= global.mapWidth * TILE_WIDTH || mouse_y >= global.mapHeight * TILE_HEIGHT) 
 		return;
-	var _tileID	= instance_position(mouse_x, mouse_y, obj_map_tile);
-	var _tileEmpty = (_tileID == noone);
-
+	var _tileID		= instance_position(mouse_x, mouse_y, obj_map_tile);
+	var _tileEmpty	= (_tileID == noone);
+	
+	// 
 	if (keyboard_check(vk_control)){
 		if (!_tileEmpty && mouse_check_button_pressed(mb_left)){
 			var _borderID	= -1;
@@ -569,9 +689,10 @@ state_default = function(){
 				_borderID	= border;
 				_iconID		= icon;
 			}
+			//add_undo_command(set_selected_border_and_icon, [selectedBorder, selectedIcon]);
 			selectedBorder	= _borderID;
 			selectedIcon	= _iconID;
-		}
+		}		
 		return;
 	}
 
@@ -579,9 +700,7 @@ state_default = function(){
 	if (keyboard_check(vk_shift)){
 		// 
 		if (mouse_check_button(mb_left)){
-			if (_tileEmpty)	{create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon);}
-			else			{update_map_tile(_tileID, selectedBorder, selectedIcon);}
-			update_tile_surface(_tileID);
+			mouse_left_pressed_on_map(_tileID);
 			return;
 		}
 	
@@ -593,9 +712,7 @@ state_default = function(){
 
 	// 
 	if (mouse_check_button_released(mb_left)){
-		if (_tileEmpty)	{create_map_tile(mouseCellX, mouseCellY, selectedBorder, selectedIcon);} 
-		else			{update_map_tile(_tileID, selectedBorder, selectedIcon);}
-		update_tile_surface(_tileID);
+		mouse_left_pressed_on_map(_tileID);
 		return;
 	}
 
@@ -607,7 +724,7 @@ state_default = function(){
 /// @description 
 state_within_gui = function(){
 	// 
-	if (mouseGuiX > 100){
+	if (mouseGuiX > GUI_REGION_X_START && mouseGuiY < GUI_REGION_Y_START){
 		nextState = state_default;
 		if (mouse_check_button(mb_middle)){
 			mStartPanX = mouse_x;

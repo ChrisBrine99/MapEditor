@@ -15,15 +15,19 @@
 #macro	TILE_HEIGHT				8
 
 // 
-#macro	BTN_CAN_SELECT			0x10000000
-#macro	BTN_SELECTED			0x20000000
-#macro	BTN_HIGHLIGHTED			0x40000000
+#macro	BTN_CAN_SELECT			0x04000000
+#macro	BTN_CAN_HIGHLIGHT		0x08000000
+#macro	BTN_SELECTED			0x10000000
+#macro	BTN_HIGHLIGHTED			0x20000000
+#macro	BTN_TOGGLED				0x40000000
 #macro	BTN_ENABLED				0x80000000
 
 // 
 #macro	CAN_BTN_BE_SELECTED		(flags & BTN_CAN_SELECT)
+#macro	CAN_BTN_BE_HIGHLIGHTED	(flags & BTN_CAN_HIGHLIGHT)
 #macro	IS_BTN_SELECTED			(flags & BTN_SELECTED)
 #macro	IS_BTN_HIGHLIGHTED		(flags & BTN_HIGHLIGHTED)
+#macro	IS_BTN_TOGGLED			(flags & BTN_TOGGLED)
 #macro	IS_BTN_ENABLED			(flags & BTN_ENABLED)
 
 // 
@@ -69,7 +73,7 @@ global.inputText	= gui_button_create_text_struct("input", 0, 0, "");
 /// @param {Real}		drawFunction	(Optional) Index for function that will be used as the button's rendering function.
 /// @param {Array<Any>}	drawArgs		(Optional) Arguments that will be utilized by the button's draw function.
 /// @param {Real}		flags			(Optional) Allows manual setting of bit flags that alter the GUI Button's functionality.
-function gui_button_create(_x, _y, _width, _height, _selectFunction, _selectArgs = [], _drawFunction = -1, _drawArgs = [], _flags = BTN_ENABLED | BTN_CAN_SELECT){
+function gui_button_create(_x, _y, _width, _height, _selectFunction, _selectArgs = [], _drawFunction = -1, _drawArgs = [], _flags = BTN_ENABLED | BTN_CAN_SELECT | BTN_CAN_HIGHLIGHT){
 	var _sArgLen = array_length(_selectArgs);
 	var _dArgLen = array_length(_drawArgs);
 	var _button = {
@@ -110,6 +114,13 @@ function gui_button_select_general(_functionKey){
 	return false;
 }
 
+/// @description A simple function that flips the "toggle" bit within a GUI button's flags between on and off
+/// with each press of the button by the user.
+function gui_button_select_toggle(){
+	if (IS_BTN_TOGGLED) {flags &= ~BTN_TOGGLED;}
+	else				{flags |=  BTN_TOGGLED;}
+}
+
 /// @description 
 /// @param {String}				functionKey		
 /// @param {Real}				xPos			
@@ -118,7 +129,8 @@ function gui_button_select_general(_functionKey){
 /// @param {Constant.VAlign}	vAlign			(Optional)
 /// @param {Real}				color			(Optional)
 function gui_button_select_general_has_input(_functionKey, _xPos, _yPos, _hAlign = fa_left, _vAlign = fa_top, _color = c_red){
-	if (!gui_button_select_general(_functionKey)) {return;}
+	if (!gui_button_select_general(_functionKey))
+		return;
 	
 	// 
 	with(global.inputText){
@@ -280,13 +292,13 @@ function gui_button_save_file(){
 }
 
 /// @description 
-/// @param {Real}	borderID	
+/// @param {Real}	borderID	The index value of the map tile that was selected by the user out of that entire group of buttons.
 function gui_button_select_map_borders(_borderID){
 	with(obj_controller) {selectedBorder = _borderID;}
 }
 
 /// @description 
-/// @param {Real}	iconID		
+/// @param {Real}	iconID		The index value of the icon that was selected by the user out of that entire group of buttons.
 function gui_button_select_map_icons(_iconID){
 	with(obj_controller) {selectedIcon = _iconID;}
 }
@@ -352,8 +364,11 @@ function gui_button_draw_text(_x, _y, _text, _font, _color, _hAlign = fa_left, _
 /// @param {Real}	hoverColor	Color to use for the background when the mouse is hovering over the button.
 /// @param {Real}	alpha		Opacity value to render the background at (Ranging from 0.0 to 1.0).
 function gui_button_draw_backing(_x, _y, _width, _height, _normColor, _hoverColor, _alpha){
-	if (IS_BTN_HIGHLIGHTED) {draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0, _hoverColor, _alpha);}
-	else					{draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0, _normColor, _alpha);}
+	if (IS_BTN_HIGHLIGHTED && CAN_BTN_BE_HIGHLIGHTED){
+		draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0, _hoverColor, _alpha);
+		return;
+	}
+	draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0, _normColor, _alpha);
 }
 
 /// @description General function for rendering an input area of a GUI Button, which is usually only shown when
@@ -368,32 +383,38 @@ function gui_button_draw_backing(_x, _y, _width, _height, _normColor, _hoverColo
 /// @param {Real}	alpha		Opacity of the help text. Also affects overally opacity of background elements.
 /// @param {Real}	backAlpha	Opacity of the background elements for the input dialog area.
 function gui_button_draw_input_area(_x, _y, _width, _height, _helpText, _inputText, _backColor, _alpha, _backAlpha){
-	// 
+	// Display the background rectangle for the text that is being input by the user.
 	draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0, _backColor, _alpha * _backAlpha);
 	
 	// Render the help and input text to the GUI; utilizing the general function for rendering text that is
-	// normally used by GUI Buttons themselves, but can be used for other contexts qhen required.
+	// normally used by GUI Buttons themselves, but can be used for other contexts when required.
 	with(_helpText)		{gui_button_draw_text(x, y, text, font, color, hAlign, vAlign, 1, _alpha);}
 	with(_inputText)	{gui_button_draw_text(x, y, text, font, color, hAlign, vAlign, 1, _alpha);}
 }
 
-/// @description 
-/// @param {Struct}	drawnText	
-/// @param {Struct} helpText	
+/// @description A generalized function for drawing a GUI button. It simply draws a background for the button
+/// (which is a rectangle that is the size of the button itself), the button's text on top of that if not
+/// selected, and an optional input region if the button can be selected to enable some sort of input function.
+/// @param {Struct}	drawnText	The text that is drawn to explain the button's functionality upon being clicked by the user.
+/// @param {Struct} helpText	Text that is displayed alongside an input region to inform the user on what to enter or what is considered valid input.
 function gui_button_draw_general(_drawnText, _helpText){
 	gui_button_draw_backing(xPos, yPos, width, height, c_black, 0x404040, 0.65);
 	if (!CAN_BTN_BE_SELECTED || !IS_BTN_SELECTED){ // Only render the current map name if a new one isn't being typed in by the user.
 		with(_drawnText) {gui_button_draw_text(x, y, text, font, color, hAlign, vAlign);}
 		return;
 	}
-	// 
+	
+	// Display the input region, which places the help text a single line of text above the button's actual
+	// vertical position. The text being input by the user is placed below that on top of the button itself.
 	gui_button_draw_input_area(xPos, yPos - height, width, height * 2, 
 		_helpText, global.inputText, 0x101010, 1, 0.75);
 }
 
-/// @description 
-/// @param {Struct}	drawnText	
-/// @param {Struct}	helpText	
+/// @description A specialized GUI button that displays either the width or height of the map that is currently
+/// being edited by the user. On top of using the general GUI button rendering function, it will also display
+/// the current width or height in tiles on the button's background.
+/// @param {Struct}	drawnText	The text that is drawn to explain what data the button is displaying to the user.
+/// @param {Struct}	helpText	Text that is displayed alongside an input region to inform the user on what to enter or what is considered valid input.
 /// @param {String}	dimension	Displays what the value to its right represents relative to the map's size; its width or height.
 function gui_button_draw_map_dimension(_drawnText, _helpText, _dimension){
 	gui_button_draw_general(_drawnText, _helpText);
@@ -401,11 +422,13 @@ function gui_button_draw_map_dimension(_drawnText, _helpText, _dimension){
 	gui_button_draw_text(xPos + 3, yPos + 1, _dimension, font_gui_small, c_white);
 }
 
-/// @description 
-/// @param {Asset.GMSprite}	sprite		
-/// @param {Real}			imageIndex	
+/// @description Another specialized GUI button that renders a map tile as a GUI button. The button highlights
+/// itself when the mouse is howing over it, and it will render as a blank tile if no value sprite or image index
+/// were supplied in the function parameters.
+/// @param {Asset.GMSprite}	sprite		The sprite resource to use to represent the button on the screen.
+/// @param {Real}			imageIndex	The image within that sprite resource (Starting from image 0) to use out of the entire resource.
 function gui_button_draw_tile_image(_sprite, _imageIndex){
-	if (!IS_BTN_HIGHLIGHTED){
+	if (!IS_BTN_HIGHLIGHTED || !CAN_BTN_BE_HIGHLIGHTED){
 		draw_sprite_ext(spr_rectangle, 0, xPos, yPos, TILE_WIDTH, TILE_HEIGHT, 0, global.mapColor, 1);
 		if (_sprite != -1 && _imageIndex != -1) {draw_sprite(_sprite, _imageIndex, xPos, yPos);}
 		return;
@@ -414,6 +437,32 @@ function gui_button_draw_tile_image(_sprite, _imageIndex){
 	if (_sprite != -1 && _imageIndex != -1) {draw_sprite_ext(_sprite, _imageIndex, xPos, yPos, 1, 1, 0, c_yellow, 1);}
 }
 
+/// @description
+/// @param {Real}	x			Position to draw the button and all its information at along the x axis.
+/// @param {Real}	y			Position to draw the button and all its information at along the y axis.
+/// @param {Real}	width		The "width" of the button which isn't related to its clickable bounding box's width.
+/// @param {Real}	height		The "height" of the button which isn't related to its clickable bounding box's height.
+/// @param {String}	direction	Text that should display the cardinal direction of the door (North, South, East, or West).
+function gui_button_draw_door_info(_x, _y, _width, _height, _direction){
+	// 
+	draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0, c_black, 0.45);
+	
+	// 
+	draw_set_halign(fa_left);
+	draw_set_valign(fa_top);
+	
+	// 
+	var _color = IS_BTN_HIGHLIGHTED ? c_yellow : c_white;
+	if (IS_BTN_TOGGLED){
+		draw_sprite_ext(spr_checkbox, 1, xPos, yPos, 1.0, 1.0, 0, _color, 1.0);
+		draw_set_color(c_white);
+		draw_text(_x + 2, _y + 3, _direction);
+		return;
+	}
+	draw_sprite_ext(spr_checkbox, 0, xPos, yPos, 1.0, 1.0, 0, _color, 1.0);
+	draw_set_color(c_maroon);
+	draw_text(_x + 2, _y + 3, _direction + " (Inactive)");
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

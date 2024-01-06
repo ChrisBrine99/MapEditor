@@ -4,9 +4,11 @@
     {"name":"Levels","order":2,"path":"folders/Levels.yy",},
   ],
   "ResourceOrderSettings": [
+    {"name":"font_gui_medium","order":5,"path":"fonts/font_gui_medium/font_gui_medium.yy",},
     {"name":"global_utilities","order":2,"path":"scripts/global_utilities/global_utilities.yy",},
     {"name":"spr_rectangle","order":2,"path":"sprites/spr_rectangle/spr_rectangle.yy",},
-    {"name":"font_gui_small","order":3,"path":"fonts/font_gui_small/font_gui_small.yy",},
+    {"name":"spr_checkbox","order":3,"path":"sprites/spr_checkbox/spr_checkbox.yy",},
+    {"name":"font_gui_small","order":4,"path":"fonts/font_gui_small/font_gui_small.yy",},
     {"name":"obj_map_tile","order":1,"path":"objects/obj_map_tile/obj_map_tile.yy",},
     {"name":"spr_map_icons","order":1,"path":"sprites/spr_map_icons/spr_map_icons.yy",},
   ],
