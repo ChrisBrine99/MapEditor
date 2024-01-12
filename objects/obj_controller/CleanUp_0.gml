@@ -7,6 +7,8 @@ var _length = ds_list_size(undoCommands);
 for (var i = 0; i < _length; i++) {delete undoCommands[| i];}
 ds_list_destroy(undoCommands);
 
+// Loop through all buttons structs that exist for the GUI (Border tiles, icons, door toggles, etc.) and free
+// them from memory before the list that holds all their pointers is freed from memory.
 _length = ds_list_size(guiButtons);
 for (var i = 0; i < _length; i++) {delete guiButtons[| i];}
 ds_list_destroy(guiButtons);

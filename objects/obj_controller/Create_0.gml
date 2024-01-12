@@ -1,23 +1,27 @@
 #region "obj_controller" Specific Macro Initialization
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	Bit flags that allow the controller object to have its substates toggled on or off as the program	   //
+//	executes. Each can be toggled regardless of what state function the controller is executing.		   //
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	FIRST_BACKSPACE			0x00000001
 #macro	UPDATE_REQUIRED			0x00000002
 #macro	UPDATE_SURF_BUFFER		0x00000004
+#macro	MAP_CHANGED				0x00000008
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	Condensed checks for the values of each of the controller's substate flags.							   //
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	IS_FIRST_BACKSPACE		flags & FIRST_BACKSPACE
 #macro	IS_UPDATE_REQUIRED		flags & UPDATE_REQUIRED
 #macro	CAN_UPDATE_SURF_BUFFER	flags & UPDATE_SURF_BUFFER
+#macro	WAS_MAP_CHANGED			flags & MAP_CHANGED
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	Each macro here is used as a key within the map containing state functions that the controller object  //
+//	can have set to run during their step event.														   //
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	STATE_DEFAULT			"Default"
@@ -31,29 +35,33 @@
 #macro	STATE_ACTIVATE_FLAGS	"ActivateFlags"
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	Determines how far the user is able to zoom into the map that they are currently editing, as well as   //
+//	how far they'll be able to zoom it out to see more of it at once.									   //
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	MAX_ZOOM_LEVEL			6.0
 #macro	MIN_ZOOM_LEVEL			0.5
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	Values for how backspacing works while typing in the editor. The first is how long the initial		   //
+//	backspace waits before it removes the second character, and the second value is how fast characters	   //
+//	are removed after that initial backspace.															   //
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	FIRST_BSPACE_INTERVAL	15.0
 #macro	NORM_BSPACE_INTERVAL	4.0
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	Values that determine how the buttons for the map's borders and icons show up in the GUI region when   //
+//	the user has their respective menus selected.														   //
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	ICONS_PER_ROW			10
 #macro	ICONS_PER_COLUMN		15
-#macro	ICON_SPACING			1
+#macro	ICON_SPACING			1	// Spacing used for both axes.
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	Some constant values that are maximums for various parts of the program's logic.
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	MAX_DOORS_PER_TILE		4
@@ -61,7 +69,10 @@
 #macro	MAX_HISTORY_SIZE		256
 
 // ------------------------------------------------------------------------------------------------------- //
-//	
+//	These determine the regions on the screen where the GUI is located in order to prevent accidentally	   //
+//	editing the map while the user is clicking their mouse in these areas. The mouse position only needs   //
+//	to satisfy one of these conditions (Being less than the x value or higher than the y value) to be	   //
+//	considered on the GUI layer of the window.															   //
 // ------------------------------------------------------------------------------------------------------- //
 
 #macro	GUI_REGION_X_START		101
@@ -91,7 +102,8 @@ tileSurf		= -1;
 tileSurfBuffer	= buffer_create(
 	global.mapWidth * TILE_WIDTH * 
 	global.mapHeight * TILE_HEIGHT *
-	4, buffer_wrap, buffer_f32);
+	4, buffer_wrap, buffer_f32
+);
 
 // 
 camera		= -1;
@@ -129,33 +141,45 @@ firstIconIndex		= 0;
 totalIconIndexes	= sprite_get_number(spr_map_icons);
 firstDoorIndex		= 0;
 
-// 
+// Add all the main buttons to the GUI layer, which are the New/Save/Load buttons that are along the topmost
+// portion of the window, the Name/Width/Height buttons for the map that is being worked on, as well as the
+// buttons that open up the Tile Border/Tile Icon/Doors/Flags submenus for editing the tile that will be placed
+// when the user left clicks on a valid area within the map's grid.
 ds_list_add(guiButtons, 
-	// 
+	// The "New" button, which will create the default map with no tiles and a width/height of 64. If a map
+	// is already being worked on (Or an edit has been made and they haven't saved), a dialog window will pop 
+	// up asking the user if they want to go through with making a new map as unsaved progress will be lost.
 	gui_button_create(2, 2, 31, 9,
 		gui_button_new_file, [],
 		gui_button_draw_general, [
 			gui_button_create_text_struct("New", 17, 3, "New", fa_center, fa_top, c_white),
-			noone
+			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
+		// This override removes default flag setup that allows button to be selected. 
 		BTN_ENABLED | BTN_CAN_HIGHLIGHT
 	),
-	// 
+	// The "Load" button, which will open up a dialog to allow the user to select a ".gmp" file if one exists
+	// on one of their computer's drives. Canceling this dialog window will have nothing happen aside from the
+	// load map window closing, and selecting a file will cause the program to load the map from the file.
 	gui_button_create(34, 2, 32, 9,
 		gui_button_load_file, [],
 		gui_button_draw_general, [
 			gui_button_create_text_struct("Load", 49, 3, "Load", fa_center, fa_top, c_white),
-			noone
+			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
+		// This override removes default flag setup that allows button to be selected. 
 		BTN_ENABLED | BTN_CAN_HIGHLIGHT
 	),
-	// 
+	// The "Save" button, which will open up a dialog that allows the user to type in a name for the map file
+	// as well as selected where that file is saved on the user's computer. The default location is the user's
+	// "documents" folder on a Windows PC.
 	gui_button_create(67, 2, 31, 9,
 		gui_button_save_file, [],
 		gui_button_draw_general, [
 			gui_button_create_text_struct("Save", 83, 3, "Save", fa_center, fa_top, c_white),
-			noone
+			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
+		// This override removes default flag setup that allows button to be selected. 
 		BTN_ENABLED | BTN_CAN_HIGHLIGHT
 	),
 	// Button for displaying on the GUI and adjusting the map's current name (This name is different from the
@@ -217,7 +241,9 @@ ds_list_add(guiButtons,
 		// This override removes default flag setup that allows button to be selected. 
 		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
 	),
-	// 
+	// Button for displaying the "Doors" button that the user can press to assign doors to the tile they're
+	// currently constructing. Up to four doors can exist on a single tile, so there are four buttons in this
+	// submenu (Not including the drop-down menu that allows the door's type to be assigned by the user).
 	gui_button_create(46, 57, 52, 9,
 		gui_button_select_general, [
 			STATE_ACTIVATE_DOORS
@@ -229,7 +255,9 @@ ds_list_add(guiButtons,
 		// This override removes default flag setup that allows button to be selected. 
 		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
 	),
-	//
+	// Button for displaying the "Other" button that the user can press to toggle and edit various settings
+	// for the map tile they're building. It includes a toggle for if the map tile is considered hidden, how
+	// many pickups exist within this cell, and so on.
 	gui_button_create(46, 67, 52, 9,
 		gui_button_select_general, [
 			STATE_ACTIVATE_FLAGS
