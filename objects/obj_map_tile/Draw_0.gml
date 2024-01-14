@@ -4,7 +4,7 @@ if (IS_HIDDEN_AREA){
 		0.0, global.mapAuxColor, 1.0);
 } else{
 	draw_sprite_ext(spr_rectangle, 0, x, y, TILE_WIDTH, TILE_HEIGHT, 
-		0.0, global.mapColor, 1.0);
+		0.0, color, 1.0);
 }
 
 // 

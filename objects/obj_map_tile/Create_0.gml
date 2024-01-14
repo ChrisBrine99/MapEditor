@@ -11,6 +11,9 @@
 flags	= 0;
 
 // 
+color	= global.mapColor;
+
+// 
 cellX	= 0;
 cellY	= 0;
 border	= -1;

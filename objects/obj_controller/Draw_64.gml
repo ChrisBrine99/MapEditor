@@ -47,16 +47,6 @@ for (var i = 0; i < _length; i++){
 }
 
 // 
-with(_selectedButton){
-	draw_sprite_ext(spr_rectangle, 0, 0, 0, GUI_WIDTH, GUI_HEIGHT, 0, c_black, 0.5);
-	if (numDrawArgs == 0){
-		script_execute(drawFunction);
-		continue;
-	}
-	script_execute_ext(drawFunction, drawArgs);
-}
-
-// 
 var _mapColor = global.mapColor;
 if (selectedFlags & HIDDEN_AREA){
 	draw_sprite_ext(spr_rectangle, 0, 62, 223, TILE_WIDTH * 4, TILE_HEIGHT * 4, 
@@ -78,4 +68,14 @@ draw_sprite_ext(spr_rectangle, 0, 27, 62, 16, 16, 0, _mapColor, 1);
 if (selectedIcon != -1){
 	draw_sprite_ext(spr_map_icons, selectedIcon, 27, 62, 2, 2, 0, c_white, 1);
 	draw_sprite_ext(spr_map_icons, selectedIcon, 62, 223, 4, 4, 0, c_white, 1);
+}
+
+// 
+with(_selectedButton){
+	draw_sprite_ext(spr_rectangle, 0, 0, 0, GUI_WIDTH, GUI_HEIGHT, 0, c_black, 0.5);
+	if (numDrawArgs == 0){
+		script_execute(drawFunction);
+		continue;
+	}
+	script_execute_ext(drawFunction, drawArgs);
 }

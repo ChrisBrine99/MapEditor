@@ -407,7 +407,7 @@ function gui_button_draw_general(_drawnText, _helpText){
 	// Display the input region, which places the help text a single line of text above the button's actual
 	// vertical position. The text being input by the user is placed below that on top of the button itself.
 	gui_button_draw_input_area(xPos, yPos - height, width, height * 2, 
-		_helpText, global.inputText, 0x101010, 1, 0.75);
+		_helpText, global.inputText, 0x101010, 1.0, 0.9);
 }
 
 /// @description A specialized GUI button that displays either the width or height of the map that is currently
@@ -418,8 +418,24 @@ function gui_button_draw_general(_drawnText, _helpText){
 /// @param {String}	dimension	Displays what the value to its right represents relative to the map's size; its width or height.
 function gui_button_draw_map_dimension(_drawnText, _helpText, _dimension){
 	gui_button_draw_general(_drawnText, _helpText);
-	draw_set_halign(fa_left); 
+	draw_set_halign(fa_left);
 	gui_button_draw_text(xPos + 3, yPos + 1, _dimension, font_gui_small, c_white);
+}
+
+/// @description 
+/// @param {Struct}	drawnText	The text that is drawn to explain what data the button is displaying to the user.
+/// @param {Struct}	helpText	Text that is displayed alongside an input region to inform the user on what to enter or what is considered valid input.
+function gui_button_draw_tile_color(_helpText){
+	gui_button_draw_backing(xPos, yPos, width, height, c_black, 0x404040, 0.65);
+	
+	if (IS_BTN_SELECTED){
+		gui_button_draw_input_area(xPos, yPos - (height * 2), width, (height * 4) + 1,
+			_helpText, global.inputText, 0x101010, 1.0, 0.9);
+		draw_set_color(c_yellow);
+		draw_text(xPos + 3, yPos + height + 1, "0x");
+	}
+	gui_button_draw_text(xPos + 3, yPos + 1, "Color", font_gui_small, c_white);
+	draw_sprite_ext(spr_rectangle, 0, xPos + 33, yPos + 1, width - 36, height - 2, 0, global.mapColor, 1.0);
 }
 
 /// @description Another specialized GUI button that renders a map tile as a GUI button. The button highlights
@@ -429,15 +445,15 @@ function gui_button_draw_map_dimension(_drawnText, _helpText, _dimension){
 /// @param {Real}			imageIndex	The image within that sprite resource (Starting from image 0) to use out of the entire resource.
 function gui_button_draw_tile_image(_sprite, _imageIndex){
 	if (!IS_BTN_HIGHLIGHTED || !CAN_BTN_BE_HIGHLIGHTED){
-		draw_sprite_ext(spr_rectangle, 0, xPos, yPos, TILE_WIDTH, TILE_HEIGHT, 0, global.mapColor, 1);
+		draw_sprite_ext(spr_rectangle, 0, xPos, yPos, TILE_WIDTH, TILE_HEIGHT, 0, c_gray, 1);
 		if (_sprite != -1 && _imageIndex != -1) {draw_sprite(_sprite, _imageIndex, xPos, yPos);}
 		return;
 	}
-	draw_sprite_ext(spr_rectangle, 0, xPos, yPos, TILE_WIDTH, TILE_HEIGHT, 0, merge_color(global.mapColor, c_yellow, 0.5), 1);
+	draw_sprite_ext(spr_rectangle, 0, xPos, yPos, TILE_WIDTH, TILE_HEIGHT, 0, merge_color(c_gray, c_yellow, 0.5), 1);
 	if (_sprite != -1 && _imageIndex != -1) {draw_sprite_ext(_sprite, _imageIndex, xPos, yPos, 1, 1, 0, c_yellow, 1);}
 }
 
-/// @description
+/// @description 
 /// @param {Real}	x			Position to draw the button and all its information at along the x axis.
 /// @param {Real}	y			Position to draw the button and all its information at along the y axis.
 /// @param {Real}	width		The "width" of the button which isn't related to its clickable bounding box's width.
@@ -462,6 +478,32 @@ function gui_button_draw_door_info(_x, _y, _width, _height, _direction){
 	draw_sprite_ext(spr_checkbox, 0, xPos, yPos, 1.0, 1.0, 0, _color, 1.0);
 	draw_set_color(c_maroon);
 	draw_text(_x + 2, _y + 3, _direction + " (Inactive)");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Other Global Utility Functions /////////////////////////////////////////////////////////////////////////////////////
+
+/// @description
+/// @param {String} character
+function character_to_number(_character){
+	var _value = ord(_character); // Converts to unicode value for text character.
+	
+	// Converting the unicode representations of the numbers 0 to 9 into their hexadecimal values.
+	if (_value >= 0x30 && _value <= 0x39)
+		return _value - 0x30;
+	
+	// Converting letters ranging from a to f from their unicode values to hexadecimal.
+	if (_value >= 0x40 && _value <= 0x46)
+		return _value - 0x37;
+	
+	// Converting letters ranging from A to F from their unicode values to hexadecimal.
+	if (_value >= 0x60 && _value <= 0x66)
+		return _value - 0x57;
+	
+	// If the character isn't any of the valid hexadecimal characters (0 to 9 and A to F) a default value of
+	// 0x00 will be returned by the function.
+	return 0x00;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -29,6 +29,7 @@
 #macro	STATE_INPUT_MAP_NAME	"InputMapName"
 #macro	STATE_INPUT_MAP_WIDTH	"InputMapWidth"
 #macro	STATE_INPUT_MAP_HEIGHT	"InputMapHeight"
+#macro	STATE_INPUT_TILE_COLOR	"InputTileColor"
 #macro	STATE_ACTIVATE_BORDERS	"ActivateBorders"
 #macro	STATE_ACTIVATE_ICONS	"ActivateIcons"
 #macro	STATE_ACTIVATE_DOORS	"ActivateDoors"
@@ -215,6 +216,15 @@ ds_list_add(guiButtons,
 			"Height"
 		]
 	),
+	// 
+	gui_button_create(2, 42, 96, 9,
+		gui_button_select_general_has_input, [
+			STATE_INPUT_TILE_COLOR, 14, 52, fa_left, fa_top, c_yellow
+		],
+		gui_button_draw_tile_color, [
+			gui_button_create_text_struct("TileColor", 5, 25, "Enter hex value for\nthe new color below:", fa_left, fa_top, c_red)
+		]
+	),
 	// Button for displaying the title "Tile". Its main purpose is to switch the current tile palette to the
 	// border tiles, which allows the user to alter what base tile is added to the map when a cell is clicked.
 	gui_button_create(4, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
@@ -263,7 +273,7 @@ ds_list_add(guiButtons,
 			STATE_ACTIVATE_FLAGS
 		], 
 		gui_button_draw_general, [
-			gui_button_create_text_struct("Flags", 72, 68, "Flags", fa_center),
+			gui_button_create_text_struct("Other", 72, 68, "Other", fa_center),
 			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
 		],
 		// This override removes default flag setup that allows button to be selected. 
@@ -609,8 +619,10 @@ update_zoom_level = function(_modifier){
 /// @description 
 /// @param {Real}	inputLimit	Total number of characters that can be stored in "global.inputString" for the current text input.
 process_text_input = function(_inputLimit){
-	var _length = 0;
-	with(global.inputText) {_length = string_length(text);}
+	var _length = string_length(keyboard_string);
+	with(global.inputText) {_length += string_length(text);}
+	if (_length > _inputLimit)
+		return;
 	
 	if (_length > 0){ // Only process attempts to backspace if there are characters to remove from the input string.
 		if (keyboard_check(vk_backspace)){
@@ -639,7 +651,7 @@ process_text_input = function(_inputLimit){
 	
 	// Inputting a new character into the currently stored input text so long as the length of that text
 	// doesn't currently exceed the limit allotted to the current input.
-	if (_length < _inputLimit && keyboard_string != ""){
+	if (keyboard_string != ""){
 		with(global.inputText){
 			text += keyboard_string;
 			keyboard_string = "";
@@ -861,7 +873,9 @@ state_input_map_width = function(){
 	}
 	
 	// 
-	process_text_input(3);
+	var _string = ord(keyboard_string);
+	if ((_string >= 0x30 && _string <= 0x39) || keyboard_check(vk_backspace))
+		process_text_input(3);
 }
 
 /// @description 
@@ -906,7 +920,39 @@ state_input_map_height = function(){
 	}
 	
 	// 
-	process_text_input(3);
+	var _string = ord(keyboard_string);
+	if ((_string >= 0x30 && _string <= 0x39) || keyboard_check(vk_backspace))
+		process_text_input(3);
+}
+
+/// @description
+state_input_map_tile_color = function(){
+	// 
+	if (keyboard_check_pressed(vk_escape)){
+		clear_selected_button();
+		with(global.inputText) {text = "";}
+		return;
+	}
+	
+	// 
+	if (keyboard_check_pressed(vk_enter)){
+		with(global.inputText){
+			// 
+			global.mapColor = 0;
+			for (var i = 0; i < 6; i++)
+				global.mapColor += character_to_number(string_char_at(text, i + 1)) << (i * 4);
+			text			 = "";
+		}
+		
+		clear_selected_button();
+		return;
+	}
+	
+	// 
+	var _string = ord(keyboard_string);
+	if ((_string >= 0x30 && _string <= 0x39) || (_string >= 0x41 && _string <= 0x46) 
+			|| (_string >= 0x61 && _string <= 0x66) || keyboard_check(vk_backspace))
+		process_text_input(6);
 }
 
 /// @description 
@@ -941,6 +987,7 @@ ds_map_add(stateFunctions, STATE_INSIDE_GUI,		state_within_gui);
 ds_map_add(stateFunctions, STATE_INPUT_MAP_NAME,	state_input_map_name);
 ds_map_add(stateFunctions, STATE_INPUT_MAP_WIDTH,	state_input_map_width);
 ds_map_add(stateFunctions, STATE_INPUT_MAP_HEIGHT,	state_input_map_height);
+ds_map_add(stateFunctions, STATE_INPUT_TILE_COLOR,	state_input_map_tile_color);
 ds_map_add(stateFunctions, STATE_ACTIVATE_BORDERS,	state_activate_border_buttons);
 ds_map_add(stateFunctions, STATE_ACTIVATE_ICONS,	state_activate_icon_buttons);
 ds_map_add(stateFunctions, STATE_ACTIVATE_DOORS,	state_activate_door_buttons);

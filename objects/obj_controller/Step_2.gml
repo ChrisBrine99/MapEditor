@@ -7,3 +7,5 @@ if (curState != nextState){
 
 // Calculate delta time such that 1 unit equals out to around 1/60th of a second.
 deltaTime = delta_time / 1000000 * 60;
+
+keyboard_string = "";
