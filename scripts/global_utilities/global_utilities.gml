@@ -1,20 +1,35 @@
 #region General Macros
 
-// Store Window dimensions and scaling factor in macros so they can be easily auto-filled instead of having 
-// to remember the values elsewhere in the code.
+// ------------------------------------------------------------------------------------------------------- //
+//	Store window dimensions and scaling factor in macros so they can be easily auto-filled instead of	   //
+//	having to remember the values elsewhere in the code.												   //
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	WINDOW_WIDTH			240
 #macro	WINDOW_HEIGHT			135
 #macro	WINDOW_SCALE			6
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	The GUI's dimensions differ from the window's in-game viewport, so the values will be stored within	   //
+//	two unique macros for easy reference instead of having to double the window's width and height.		   //
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	GUI_WIDTH				480
 #macro	GUI_HEIGHT				270
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	The width and height of a single map tile in pixels.												   //
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	TILE_WIDTH				8
 #macro	TILE_HEIGHT				8
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	Substates for button structs that are created using the "gui_button_create" function and managed by	   //
+//	obj_controller. Each can be toggled on or off to enable/disable various characteristics of a given	   //
+//	button instance.																					   //
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	BTN_CAN_SELECT			0x04000000
 #macro	BTN_CAN_HIGHLIGHT		0x08000000
 #macro	BTN_SELECTED			0x10000000
@@ -22,7 +37,10 @@
 #macro	BTN_TOGGLED				0x40000000
 #macro	BTN_ENABLED				0x80000000
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	Macros that condense the code required for checking the current value of a given substate bit.		   //
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	CAN_BTN_BE_SELECTED		(flags & BTN_CAN_SELECT)
 #macro	CAN_BTN_BE_HIGHLIGHTED	(flags & BTN_CAN_HIGHLIGHT)
 #macro	IS_BTN_SELECTED			(flags & BTN_SELECTED)
@@ -30,12 +48,22 @@
 #macro	IS_BTN_TOGGLED			(flags & BTN_TOGGLED)
 #macro	IS_BTN_ENABLED			(flags & BTN_ENABLED)
 
-// 
+// ------------------------------------------------------------------------------------------------------- //
+//	Macros that store default values for a map's name, its default and "aux" colors, as well as its width  //
+//	and	height in map tiles.																			   //
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	MAP_DEFAULT_NAME		"Unnamed Map"
 #macro	MAP_DEFAULT_WIDTH		64
 #macro	MAP_DEFAULT_HEIGHT		64
+#macro	MAP_DEFAULT_COLOR		0xF87800
+#macro	MAP_DEFAULT_AUX_COLOR	0x98F858
 
-//
+// ------------------------------------------------------------------------------------------------------- //
+//	Keys that references the values for text structs that exist on the editor's GUI for showing the user   //
+//	the current name they have set for the map, its width in map tiles, and its height.					   //
+// ------------------------------------------------------------------------------------------------------- //
+
 #macro	KEY_MAP_NAME			"MapName"
 #macro	KEY_MAP_WIDTH			"MapWidth"
 #macro	KEY_MAP_HEIGHT			"MapHeight"
@@ -44,14 +72,21 @@
 
 #region Global Variable Initializations
 
-// 
+// Stores the current name of the map as set by the user (By default it is "Unnamed Map"), the width of the map
+// in tile (64 tiles by default), as well the height of the map by that same metric (Also 64 by default).
 global.mapName		= MAP_DEFAULT_NAME;
 global.mapWidth		= MAP_DEFAULT_WIDTH;
 global.mapHeight	= MAP_DEFAULT_HEIGHT;
-global.mapColor		= 0xF87800;
-global.mapAuxColor	= 0x98F858;
 
-// 
+// Stores the color that will be used when placing a tile (global.mapColor) as well as the color of a map tile
+// that is hidden (Won't show up on the map until explored by the player). Only the first value can be altered
+// by the user within the editor. The second value will always override the first when a tile is set to hidden.
+global.mapColor		= MAP_DEFAULT_COLOR;
+global.mapAuxColor	= MAP_DEFAULT_AUX_COLOR;
+
+// An important data structure that contains all instances of GUI text struct's that are currently active within
+// the editor. Also, another variable stores a pointer to the text struct that is used for holding inputs typed
+// in by the user.
 global.textStructs	= ds_map_create();
 global.inputText	= gui_button_create_text_struct("input", 0, 0, "");
 
@@ -152,6 +187,8 @@ function gui_button_new_file(){
 	global.mapName		= MAP_DEFAULT_NAME;
 	global.mapWidth		= MAP_DEFAULT_WIDTH;
 	global.mapHeight	= MAP_DEFAULT_HEIGHT;
+	global.mapColor		= MAP_DEFAULT_COLOR;
+	global.mapAuxColor	= MAP_DEFAULT_AUX_COLOR;
 	
 	// 
 	with(global.textStructs[? KEY_MAP_NAME])	{text = MAP_DEFAULT_NAME;}
@@ -294,13 +331,21 @@ function gui_button_save_file(){
 /// @description 
 /// @param {Real}	borderID	The index value of the map tile that was selected by the user out of that entire group of buttons.
 function gui_button_select_map_borders(_borderID){
-	with(obj_controller) {selectedBorder = _borderID;}
+	with(obj_controller){
+		selectedBorder = _borderID;
+		with(previewTileObject)		{border = _borderID;}
+		with(borderSectionButton)	{drawArgs[2] = _borderID;}
+	}
 }
 
 /// @description 
 /// @param {Real}	iconID		The index value of the icon that was selected by the user out of that entire group of buttons.
 function gui_button_select_map_icons(_iconID){
-	with(obj_controller) {selectedIcon = _iconID;}
+	with(obj_controller){
+		selectedIcon = _iconID;
+		with(previewTileObject)	{icon = _iconID;}
+		with(iconSectionButton) {drawArgs[2] = _iconID;}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -423,7 +468,6 @@ function gui_button_draw_map_dimension(_drawnText, _helpText, _dimension){
 }
 
 /// @description 
-/// @param {Struct}	drawnText	The text that is drawn to explain what data the button is displaying to the user.
 /// @param {Struct}	helpText	Text that is displayed alongside an input region to inform the user on what to enter or what is considered valid input.
 function gui_button_draw_tile_color(_helpText){
 	gui_button_draw_backing(xPos, yPos, width, height, c_black, 0x404040, 0.65);
@@ -436,6 +480,24 @@ function gui_button_draw_tile_color(_helpText){
 	}
 	gui_button_draw_text(xPos + 3, yPos + 1, "Color", font_gui_small, c_white);
 	draw_sprite_ext(spr_rectangle, 0, xPos + 33, yPos + 1, width - 36, height - 2, 0, global.mapColor, 1.0);
+}
+
+/// @description 
+/// @param {Struct}			drawnText	
+/// @param {Asset.GMSprite}	sprite		
+/// @parma {Real}			imageIndex	
+/// @param {Real}			xOffset		
+/// @param {Real}			yOffset		
+/// @param {Real}			scale		
+/// @parma {Real}			backColor	
+function gui_button_draw_image(_drawnText, _sprite, _imageIndex, _xOffset, _yOffset, _scale, _backColor){
+	gui_button_draw_general(_drawnText, noone);
+	if (_sprite != -1 && _imageIndex != -1){
+		draw_sprite_ext(spr_rectangle, 0, xPos + _xOffset, yPos + _yOffset, _scale * TILE_WIDTH, _scale * TILE_HEIGHT, 0, _backColor, 1.0);
+		draw_sprite_ext(_sprite, _imageIndex, xPos + _xOffset, yPos + _yOffset, _scale, _scale, 0, c_white, 1.0);
+		return;
+	}
+	draw_sprite_ext(spr_rectangle, 0, xPos + _xOffset, yPos + _yOffset, _scale * TILE_WIDTH, _scale * TILE_HEIGHT, 0, c_dkgray, 1.0);
 }
 
 /// @description Another specialized GUI button that renders a map tile as a GUI button. The button highlights

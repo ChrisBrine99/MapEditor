@@ -1,12 +1,7 @@
 // 
-if (IS_HIDDEN_AREA){
-	draw_sprite_ext(spr_rectangle, 0, x, y, TILE_WIDTH, TILE_HEIGHT, 
-		0.0, global.mapAuxColor, 1.0);
-} else{
-	draw_sprite_ext(spr_rectangle, 0, x, y, TILE_WIDTH, TILE_HEIGHT, 
-		0.0, color, 1.0);
-}
+draw_sprite_ext(spr_rectangle, 0, x, y, image_xscale * TILE_WIDTH, image_yscale * TILE_HEIGHT, 
+	0.0, color, image_alpha);
 
 // 
-if (border != -1)	{draw_sprite(spr_map_borders, border, x, y);}
-if (icon != -1)		{draw_sprite(spr_map_icons, icon, x, y);}
+if (border != -1)	{draw_sprite_ext(spr_map_borders, border, x, y, image_xscale, image_yscale, 0.0, c_white, image_alpha);}
+if (icon != -1)		{draw_sprite_ext(spr_map_icons, icon, x, y, image_xscale, image_yscale, 0.0, c_white, image_alpha);}

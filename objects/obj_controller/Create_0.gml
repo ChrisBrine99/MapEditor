@@ -9,6 +9,7 @@
 #macro	UPDATE_REQUIRED			0x00000002
 #macro	UPDATE_SURF_BUFFER		0x00000004
 #macro	MAP_CHANGED				0x00000008
+#macro	WITHIN_GUI				0x00000010
 
 // ------------------------------------------------------------------------------------------------------- //
 //	Condensed checks for the values of each of the controller's substate flags.							   //
@@ -18,6 +19,7 @@
 #macro	IS_UPDATE_REQUIRED		flags & UPDATE_REQUIRED
 #macro	CAN_UPDATE_SURF_BUFFER	flags & UPDATE_SURF_BUFFER
 #macro	WAS_MAP_CHANGED			flags & MAP_CHANGED
+#macro	IS_WITHIN_GUI			flags & WITHIN_GUI
 
 // ------------------------------------------------------------------------------------------------------- //
 //	Each macro here is used as a key within the map containing state functions that the controller object  //
@@ -129,7 +131,18 @@ guiButtons			= ds_list_create();
 selectedButton		= noone;
 selectedBorder		= 1;
 selectedIcon		= -1;
-selectedFlags		= HIDDEN_AREA;
+selectedFlags		= 0;
+
+// 
+borderSectionButton	= noone;
+iconSectionButton	= noone;
+
+//
+previewTileObject	= instance_create_depth(62, 223, 30, obj_map_tile);
+with(previewTileObject){
+	border	= 1;
+	icon	= -1;
+}
 
 // 
 backspaceTimer		= 0.0;
@@ -225,32 +238,6 @@ ds_list_add(guiButtons,
 			gui_button_create_text_struct("TileColor", 5, 25, "Enter hex value for\nthe new color below:", fa_left, fa_top, c_red)
 		]
 	),
-	// Button for displaying the title "Tile". Its main purpose is to switch the current tile palette to the
-	// border tiles, which allows the user to alter what base tile is added to the map when a cell is clicked.
-	gui_button_create(4, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
-		gui_button_select_general, [
-			STATE_ACTIVATE_BORDERS
-		],
-		gui_button_draw_general, [
-			gui_button_create_text_struct("Tile", 14, 53, "Tile", fa_center),
-			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
-		], 
-		// This override removes default flag setup that allows button to be selected. 
-		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
-	),
-	// Button for displaying the title "Icon". Its main purpose is to switch the current tile palette to the
-	// icon tiles, which allows the user to alter what icon is added to a tile when placed onto the map grid.
-	gui_button_create(25, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
-		gui_button_select_general, [
-			STATE_ACTIVATE_ICONS
-		],
-		gui_button_draw_general, [
-			gui_button_create_text_struct("Icon", 35, 53, "Icon", fa_center),
-			noone	// An "Input Text Struct" header isn't required, so this can be left blank.
-		],
-		// This override removes default flag setup that allows button to be selected. 
-		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
-	),
 	// Button for displaying the "Doors" button that the user can press to assign doors to the tile they're
 	// currently constructing. Up to four doors can exist on a single tile, so there are four buttons in this
 	// submenu (Not including the drop-down menu that allows the door's type to be assigned by the user).
@@ -280,6 +267,46 @@ ds_list_add(guiButtons,
 		BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
 	),
 );
+
+// Button for displaying the title "Tile". Its main purpose is to switch the current tile palette to the
+// border tiles, which allows the user to alter what base tile is added to the map when a cell is clicked.
+borderSectionButton = gui_button_create(4, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
+	gui_button_select_general, [
+		STATE_ACTIVATE_BORDERS
+	],
+	gui_button_draw_image, [
+		gui_button_create_text_struct("Tile", 14, 53, "Tile", fa_center),
+		spr_map_borders,
+		selectedBorder,
+		2,		// X and Y offsets of border image relative to button's origin.
+		10,
+		2.0,	// Scaling factor of the image on the button.
+		c_gray	// Color of the rectangle behind the rendered border image.
+	],
+	// This override removes default flag setup that allows button to be selected. 
+	BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
+);
+ds_list_add(guiButtons, borderSectionButton);
+
+// Button for displaying the title "Icon". Its main purpose is to switch the current tile palette to the
+// icon tiles, which allows the user to alter what icon is added to a tile when placed onto the map grid.
+iconSectionButton = gui_button_create(25, 52, 4 + (TILE_WIDTH * 2), 13 + (TILE_HEIGHT * 2),
+	gui_button_select_general, [
+		STATE_ACTIVATE_ICONS
+	],
+	gui_button_draw_image, [
+		gui_button_create_text_struct("Icon", 35, 53, "Icon", fa_center),
+		spr_map_icons,
+		selectedIcon,
+		2,		// X and Y offsets of border image relative to button's origin.
+		10,
+		2.0,	// Scaling factor of the image on the button.
+		c_gray	// Color of the rectangle behind the rendered border image.
+	],
+	// This override removes default flag setup that allows button to be selected. 
+	BTN_ENABLED	| BTN_CAN_HIGHLIGHT 
+);
+ds_list_add(guiButtons, iconSectionButton);
 
 // Loop through all the "frames" found within "spr_map_borders"; creating a GUI button for each one that the
 // user can then select to apply that tile border onto their to-be-placed tile. Since there are more than 10
@@ -692,6 +719,7 @@ state_default = function(){
 	var _mMiddleHeld = mouse_check_button(mb_middle);
 	if (!_mMiddleHeld && (mouseGuiX <= GUI_REGION_X_START || mouseGuiY >= GUI_REGION_Y_START)){
 		nextState = state_within_gui;
+		flags	 |= WITHIN_GUI;
 		return;
 	}
 	
@@ -766,6 +794,7 @@ state_within_gui = function(){
 	// 
 	if (mouseGuiX > GUI_REGION_X_START && mouseGuiY < GUI_REGION_Y_START){
 		nextState = state_default;
+		flags	 &= ~WITHIN_GUI;
 		if (mouse_check_button(mb_middle)){
 			mStartPanX = mouse_x;
 			mStartPanY = mouse_y;

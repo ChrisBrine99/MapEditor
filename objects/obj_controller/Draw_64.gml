@@ -47,27 +47,11 @@ for (var i = 0; i < _length; i++){
 }
 
 // 
-var _mapColor = global.mapColor;
-if (selectedFlags & HIDDEN_AREA){
-	draw_sprite_ext(spr_rectangle, 0, 62, 223, TILE_WIDTH * 4, TILE_HEIGHT * 4, 
-		0.0, global.mapAuxColor, 1.0);
-} else{
-	draw_sprite_ext(spr_rectangle, 0, 62, 223, TILE_WIDTH * 4, TILE_HEIGHT * 4,
-		0.0, _mapColor, 1.0);
-}
-
-// 
-draw_sprite_ext(spr_rectangle, 0, 6, 62, 16, 16, 0, _mapColor, 1);
-if (selectedBorder != 1){
-	draw_sprite_ext(spr_map_borders, selectedBorder, 6, 62, 2, 2, 0, c_white, 1);
-	draw_sprite_ext(spr_map_borders, selectedBorder, 62, 223, 4, 4, 0, c_white, 1);
-}
-
-// 
-draw_sprite_ext(spr_rectangle, 0, 27, 62, 16, 16, 0, _mapColor, 1);
-if (selectedIcon != -1){
-	draw_sprite_ext(spr_map_icons, selectedIcon, 27, 62, 2, 2, 0, c_white, 1);
-	draw_sprite_ext(spr_map_icons, selectedIcon, 62, 223, 4, 4, 0, c_white, 1);
+with(previewTileObject){
+	image_xscale = 4.0;
+	image_yscale = 4.0;
+	image_alpha	 = 1.0;
+	event_perform(ev_draw, 0);
 }
 
 // 
