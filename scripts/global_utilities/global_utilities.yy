@@ -1,11 +1,13 @@
 {
-  "resourceType": "GMScript",
-  "resourceVersion": "1.0",
-  "name": "global_utilities",
-  "isCompatibility": false,
-  "isDnD": false,
-  "parent": {
-    "name": "Core",
-    "path": "folders/Core.yy",
+  "$GMScript":"",
+  "%Name":"global_utilities",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"global_utilities",
+  "parent":{
+    "name":"Core",
+    "path":"folders/Core.yy",
   },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
 }

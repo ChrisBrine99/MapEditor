@@ -1,43 +1,45 @@
 {
-  "resourceType": "GMProject",
-  "resourceVersion": "1.7",
-  "name": "MapEditor",
-  "AudioGroups": [
-    {"resourceType":"GMAudioGroup","resourceVersion":"1.3","name":"audiogroup_default","targets":-1,},
+  "$GMProject":"",
+  "%Name":"MapEditor",
+  "AudioGroups":[
+    {"$GMAudioGroup":"","%Name":"audiogroup_default","name":"audiogroup_default","resourceType":"GMAudioGroup","resourceVersion":"2.0","targets":-1,},
   ],
-  "configs": {
-    "children": [],
-    "name": "Default",
+  "configs":{
+    "children":[],
+    "name":"Default",
   },
-  "defaultScriptType": 1,
-  "Folders": [
-    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Core","folderPath":"folders/Core.yy",},
-    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Graphics","folderPath":"folders/Graphics.yy",},
-    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Levels","folderPath":"folders/Levels.yy",},
+  "defaultScriptType":1,
+  "Folders":[
+    {"$GMFolder":"","%Name":"Core","folderPath":"folders/Core.yy","name":"Core","resourceType":"GMFolder","resourceVersion":"2.0",},
+    {"$GMFolder":"","%Name":"Graphics","folderPath":"folders/Graphics.yy","name":"Graphics","resourceType":"GMFolder","resourceVersion":"2.0",},
+    {"$GMFolder":"","%Name":"Levels","folderPath":"folders/Levels.yy","name":"Levels","resourceType":"GMFolder","resourceVersion":"2.0",},
   ],
-  "IncludedFiles": [],
-  "isEcma": false,
-  "LibraryEmitters": [],
-  "MetaData": {
-    "IDEVersion": "2023.11.1.129",
+  "IncludedFiles":[],
+  "isEcma":false,
+  "LibraryEmitters":[],
+  "MetaData":{
+    "IDEVersion":"2024.2.0.132",
   },
-  "resources": [
+  "name":"MapEditor",
+  "resources":[
     {"id":{"name":"font_gui_medium","path":"fonts/font_gui_medium/font_gui_medium.yy",},},
-    {"id":{"name":"obj_controller","path":"objects/obj_controller/obj_controller.yy",},},
-    {"id":{"name":"global_utilities","path":"scripts/global_utilities/global_utilities.yy",},},
-    {"id":{"name":"spr_rectangle","path":"sprites/spr_rectangle/spr_rectangle.yy",},},
-    {"id":{"name":"spr_checkbox","path":"sprites/spr_checkbox/spr_checkbox.yy",},},
     {"id":{"name":"font_gui_small","path":"fonts/font_gui_small/font_gui_small.yy",},},
+    {"id":{"name":"obj_controller","path":"objects/obj_controller/obj_controller.yy",},},
     {"id":{"name":"obj_map_tile","path":"objects/obj_map_tile/obj_map_tile.yy",},},
-    {"id":{"name":"spr_map_icons","path":"sprites/spr_map_icons/spr_map_icons.yy",},},
-    {"id":{"name":"spr_map_borders","path":"sprites/spr_map_borders/spr_map_borders.yy",},},
     {"id":{"name":"rm_main","path":"rooms/rm_main/rm_main.yy",},},
+    {"id":{"name":"global_utilities","path":"scripts/global_utilities/global_utilities.yy",},},
+    {"id":{"name":"spr_checkbox","path":"sprites/spr_checkbox/spr_checkbox.yy",},},
+    {"id":{"name":"spr_map_borders","path":"sprites/spr_map_borders/spr_map_borders.yy",},},
+    {"id":{"name":"spr_map_icons","path":"sprites/spr_map_icons/spr_map_icons.yy",},},
+    {"id":{"name":"spr_rectangle","path":"sprites/spr_rectangle/spr_rectangle.yy",},},
   ],
-  "RoomOrderNodes": [
+  "resourceType":"GMProject",
+  "resourceVersion":"2.0",
+  "RoomOrderNodes":[
     {"roomId":{"name":"rm_main","path":"rooms/rm_main/rm_main.yy",},},
   ],
-  "templateType": null,
-  "TextureGroups": [
-    {"resourceType":"GMTextureGroup","resourceVersion":"1.3","name":"Default","autocrop":true,"border":2,"compressFormat":"bz2","directory":"","groupParent":null,"isScaled":true,"loadType":"default","mipsToGenerate":0,"targets":-1,},
+  "templateType":null,
+  "TextureGroups":[
+    {"$GMTextureGroup":"","%Name":"Default","autocrop":true,"border":2,"compressFormat":"bz2","customOptions":"","directory":"","groupParent":null,"isScaled":true,"loadType":"default","mipsToGenerate":0,"name":"Default","resourceType":"GMTextureGroup","resourceVersion":"2.0","targets":-1,},
   ],
 }

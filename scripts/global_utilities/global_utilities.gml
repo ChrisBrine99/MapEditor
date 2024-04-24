@@ -178,6 +178,40 @@ function gui_button_select_general_has_input(_functionKey, _xPos, _yPos, _hAlign
 }
 
 /// @description 
+/// @param {String}				functionKey	
+/// @param {Array<String>}		buttonText	
+function gui_button_select_drop_menu(_functionKey, _buttonText){
+	if (!gui_button_select_general(_functionKey) || !is_array(_buttonText))
+		return;
+	
+	// 
+	var _curY	= 0;
+	var _x		= xPos;
+	var _y		= yPos;
+	var _width	= width;
+	var _height = height;
+	with(obj_controller){
+		var _length = array_length(_buttonText);
+		for (var i = 0; i < _length; i++){
+			_curY = _y + _height + (i * 10);
+			ds_list_add(guiButtons, 
+				gui_button_create(_x, _curY, _width, 10, 
+					gui_button_select_general, [
+						""
+					],
+					gui_button_draw_general, [
+						gui_button_create_text_struct(_buttonText[i], _x + _width - 2, _curY + 1, _buttonText[i], fa_right),
+						noone	// An "Input Text Struct" header isn't required, so this can be left blank.
+					],
+					// This override removes default flag setup that allows button to be selected. 
+					BTN_ENABLED | BTN_CAN_HIGHLIGHT
+				)
+			);
+		}
+	}
+}
+
+/// @description 
 function gui_button_new_file(){
 	// 
 	var _prevWidth	= global.mapWidth;
@@ -345,6 +379,40 @@ function gui_button_select_map_icons(_iconID){
 		selectedIcon = _iconID;
 		with(previewTileObject)	{icon = _iconID;}
 		with(iconSectionButton) {drawArgs[2] = _iconID;}
+	}
+}
+
+/// @description 
+/// @param {Real}	doorFlagBit
+function gui_button_select_toggle_door(_doorFlagBit){
+	var _offset = 0;
+	switch(_doorFlagBit){
+		case NORTH_DOOR:	_offset = 3;	break;
+		case WEST_DOOR:		_offset = 6;	break;
+		case SOUTH_DOOR:	_offset = 9;	break;
+	}
+	
+	if (IS_BTN_TOGGLED){
+		flags &= ~BTN_TOGGLED;
+		with(obj_controller){
+			with(previewTileObject)
+				flags &= ~_doorFlagBit;
+			
+			_offset += firstDoorIndex;
+			guiButtons[| _offset + 1].flags &= ~BTN_ENABLED;
+			guiButtons[| _offset + 2].flags &= ~BTN_ENABLED;
+		}
+		return;
+	}
+	
+	flags |= BTN_TOGGLED;
+	with(obj_controller){
+		with(previewTileObject)
+			flags |= _doorFlagBit;
+
+		_offset += firstDoorIndex;
+		guiButtons[| _offset + 1].flags |= BTN_ENABLED;
+		guiButtons[| _offset + 2].flags |= BTN_ENABLED;
 	}
 }
 
@@ -521,25 +589,65 @@ function gui_button_draw_tile_image(_sprite, _imageIndex){
 /// @param {Real}	width		The "width" of the button which isn't related to its clickable bounding box's width.
 /// @param {Real}	height		The "height" of the button which isn't related to its clickable bounding box's height.
 /// @param {String}	direction	Text that should display the cardinal direction of the door (North, South, East, or West).
-function gui_button_draw_door_info(_x, _y, _width, _height, _direction){
+/// @param {Real}	doorID		The door's "type" which will determine which data is shown by this gui button.
+function gui_button_draw_door_info(_x, _y, _width, _height, _direction, _doorID){
 	// 
 	draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0, c_black, 0.45);
+	draw_sprite_ext(spr_rectangle, 0, _x + 2, _y + 11, _width - 4, _height - 12, 0, c_black, 0.45);
 	
 	// 
 	draw_set_halign(fa_left);
 	draw_set_valign(fa_top);
 	
 	// 
+	var _doorFlag	= EVENT_FLAG_INVALID;
+	with(obj_controller){
+		with(previewTileObject)
+			_doorFlag	= doorData[_doorID, DOOR_FLAG];
+	}
+	
+	// 
 	var _color = IS_BTN_HIGHLIGHTED ? c_yellow : c_white;
 	if (IS_BTN_TOGGLED){
 		draw_sprite_ext(spr_checkbox, 1, xPos, yPos, 1.0, 1.0, 0, _color, 1.0);
 		draw_set_color(c_white);
-		draw_text(_x + 2, _y + 3, _direction);
+		draw_text(_x + 4, _y + 2, _direction);
+		
+		draw_set_halign(fa_right);
+		draw_text(_x + _width - 12, _y + 2, "(Active)");
+		draw_text(_x + _width - 20, _y + 22, "0x");
+		draw_set_halign(fa_left);
+		
+		draw_text(_x + 4, _y + 12, "Type");
+		draw_text(_x + 4, _y + 22, "Flag ID");
 		return;
 	}
 	draw_sprite_ext(spr_checkbox, 0, xPos, yPos, 1.0, 1.0, 0, _color, 1.0);
 	draw_set_color(c_maroon);
-	draw_text(_x + 2, _y + 3, _direction + " (Inactive)");
+	draw_text(_x + 4, _y + 2, _direction);
+	
+	draw_set_halign(fa_right);
+	draw_text(_x + _width - 12, _y + 2, "(Inactive)");
+	draw_text(_x + _width - 20, _y + 22, "0x");
+	draw_set_halign(fa_left);
+	
+	draw_set_color(c_dkgray);
+	draw_text(_x + 4, _y + 12, "Type");
+	draw_text(_x + 4, _y + 22, "Flag ID");
+}
+
+/// @description 
+/// @param {Real}	x
+/// @param {Real}	y
+/// @param {Real}	width
+/// @param {Real}	height
+function gui_button_draw_drop_menu(_x, _y, _width, _height){
+	if (!IS_BTN_HIGHLIGHTED){
+		//draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0.0, c_dkgray, 1.0);
+	}
+	
+	// 
+	//draw_sprite_ext(spr_rectangle, 0, _x, _y, _width, _height, 0.0, 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

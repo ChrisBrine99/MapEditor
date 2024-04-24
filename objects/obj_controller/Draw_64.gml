@@ -26,6 +26,14 @@ draw_text(32, 225, "Final\nTile\nOutput");
 draw_set_halign(fa_left);
 
 // 
+with(previewTileObject){
+	image_xscale = 4.0;
+	image_yscale = 4.0;
+	image_alpha	 = 1.0;
+	event_perform(ev_draw, 0);
+}
+
+// 
 var _selectedButton = selectedButton;
 var _length = ds_list_size(guiButtons);
 for (var i = 0; i < _length; i++){
@@ -44,14 +52,6 @@ for (var i = 0; i < _length; i++){
 		}
 		script_execute_ext(drawFunction, drawArgs);
 	}
-}
-
-// 
-with(previewTileObject){
-	image_xscale = 4.0;
-	image_yscale = 4.0;
-	image_alpha	 = 1.0;
-	event_perform(ev_draw, 0);
 }
 
 // 

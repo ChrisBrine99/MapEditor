@@ -36,6 +36,8 @@
 #macro	STATE_ACTIVATE_ICONS	"ActivateIcons"
 #macro	STATE_ACTIVATE_DOORS	"ActivateDoors"
 #macro	STATE_ACTIVATE_FLAGS	"ActivateFlags"
+#macro	STATE_DROP_MENU_DOORS	"DropMenuDoors"
+#macro	STATE_INPUT_DOOR_FLAG	"InputDoorFlag"
 
 // ------------------------------------------------------------------------------------------------------- //
 //	Determines how far the user is able to zoom into the map that they are currently editing, as well as   //
@@ -80,6 +82,12 @@
 
 #macro	GUI_REGION_X_START		101
 #macro	GUI_REGION_Y_START		256
+
+// ------------------------------------------------------------------------------------------------------- //
+//	
+// ------------------------------------------------------------------------------------------------------- //
+
+#macro	EVENT_FLAG_INVALID	   -100
 
 #endregion
 
@@ -149,11 +157,14 @@ backspaceTimer		= 0.0;
 bufferUpdateTimer	= 0.0;
 
 // 
-firstBorderIndex	= 0;
+firstBorderIndex	= -1;
 totalBorderIndexes	= sprite_get_number(spr_map_borders) - 1;
-firstIconIndex		= 0;
+firstIconIndex		= -1;
 totalIconIndexes	= sprite_get_number(spr_map_icons);
-firstDoorIndex		= 0;
+firstDoorIndex		= -1;
+
+// 
+firstDropMenuIndex	= -1;
 
 // Add all the main buttons to the GUI layer, which are the New/Save/Load buttons that are along the topmost
 // portion of the window, the Name/Width/Height buttons for the map that is being worked on, as well as the
@@ -382,29 +393,74 @@ for (var j = 0; j < totalIconIndexes; j++){
 totalIconIndexes++;
 
 // 
-var _doorDirection	= ["North", "East", "South", "West"];
-var _buttonHeight	= floor(TILE_HEIGHT * 3.7) + 1;
+var _doorDirection	= [ "North", "East", "South", "West" ];
+var _doorIndex		= [ EASTERN_DOORWAY, NORTHERN_DOORWAY, WESTERN_DOORWAY, SOUTHERN_DOORWAY ];
+var _doorType		= [ "Any", "Ice", "Wave", "Plasma", "Missile", 
+							"S. Missile", "Power Bomb", "Locked Flag", "Locked Forever" ];
+var _buttonHeight	= floor(TILE_HEIGHT * 3.7) + 3;
 
 // 
 firstDoorIndex	= ds_list_size(guiButtons);
-_yOffset		= 88;
+_yOffset		= 84;
 for (var k = 0; k < MAX_DOORS_PER_TILE; k++){
+	// 
 	ds_list_add(guiButtons, 
-		gui_button_create(86, _yOffset + 2, TILE_WIDTH, TILE_HEIGHT, 
-			gui_button_select_toggle, [],
+		gui_button_create(86, _yOffset + 1, TILE_WIDTH, TILE_HEIGHT, 
+			gui_button_select_toggle_door, [ EAST_DOOR << k ],
 			gui_button_draw_door_info, [
 				5,							// X
 				_yOffset,					// Y
 				GUI_REGION_X_START - 10,	// Width
 				_buttonHeight,				// Height
 				_doorDirection[k],			// Direction Text
-				noone	// An "Input Text Struct" header isn't required, so this can be left blank.
+				_doorIndex[k]
 			],
-			0 // These buttons are all disabled by default.
+			BTN_CAN_HIGHLIGHT // These buttons are all disabled by default.
 		)
 	);
+	
+	// 
+	ds_list_add(guiButtons,
+		gui_button_create(8, _yOffset + 12, GUI_REGION_X_START - 16, 10,
+			gui_button_select_drop_menu, [
+				STATE_DROP_MENU_DOORS, 
+				_doorType
+			],
+			gui_button_draw_drop_menu, [
+				50,							// X
+				_yOffset + 12,				// Y
+				GUI_REGION_X_START - 56,	// Width
+				10,							// Height
+			],
+			BTN_CAN_HIGHLIGHT // These buttons are all disabled by default.
+		)
+	);
+	
+	// 
+	ds_list_add(guiButtons,
+		gui_button_create(76, _yOffset + 22, GUI_REGION_X_START - 84, 8,
+			gui_button_select_general_has_input, [
+				STATE_INPUT_DOOR_FLAG, 
+				GUI_REGION_X_START - 8,
+				_yOffset + 12,
+				fa_right,
+				fa_top,
+				c_red
+			],
+			gui_button_draw_general, [
+				noone,
+				noone,
+			],
+			BTN_CAN_SELECT // These buttons are all disabled by default.
+		)
+	);
+	
+	// 
 	_yOffset += _buttonHeight + ICON_SPACING;
 }
+
+// 
+firstDropMenuIndex = ds_list_size(guiButtons);
 
 #endregion
 
@@ -988,7 +1044,7 @@ state_input_map_tile_color = function(){
 state_activate_border_buttons = function(){
 	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, true);
 	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	false);
-	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE, false);
+	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE * 3, false);
 	nextState = lastState;
 }
 
@@ -996,16 +1052,52 @@ state_activate_border_buttons = function(){
 state_activate_icon_buttons = function(){
 	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	true);
 	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, false);
-	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE, false);
+	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE * 3, false);
 	nextState = lastState;
 }
 
 /// @description 
 state_activate_door_buttons = function(){
-	set_buttons_enabled(firstDoorIndex,		MAX_DOORS_PER_TILE, true);
+	for (var i = 0; i < MAX_DOORS_PER_TILE; i++)
+		guiButtons[| firstDoorIndex + (i * 3)].flags |= BTN_ENABLED;
+	
 	set_buttons_enabled(firstIconIndex,		totalIconIndexes,	false);
 	set_buttons_enabled(firstBorderIndex,	totalBorderIndexes, false);
 	nextState = lastState;
+}
+
+/// @description 
+state_create_drop_menu_doors = function(){
+	
+}
+
+/// @description 
+state_input_door_event_flag = function(){
+	// 
+	if (keyboard_check_pressed(vk_escape)){
+		clear_selected_button();
+		with(global.inputText) {text = "";}
+		return;
+	}
+	
+	// 
+	/*if (keyboard_check_pressed(vk_enter)){
+		var _flag = 0x00;
+		with(global.inputText){
+			var _length = string_length(text);
+			for (var i = 0; i < _length; i++)
+				_flag += character_to_number(string_char_at(text, i + 1));
+			text			 = "";
+		}
+		
+		// 
+		with(previewTileObject){
+			
+		}
+		
+		clear_selected_button();
+		return;
+	}*/
 }
 
 #endregion
@@ -1020,6 +1112,8 @@ ds_map_add(stateFunctions, STATE_INPUT_TILE_COLOR,	state_input_map_tile_color);
 ds_map_add(stateFunctions, STATE_ACTIVATE_BORDERS,	state_activate_border_buttons);
 ds_map_add(stateFunctions, STATE_ACTIVATE_ICONS,	state_activate_icon_buttons);
 ds_map_add(stateFunctions, STATE_ACTIVATE_DOORS,	state_activate_door_buttons);
+ds_map_add(stateFunctions, STATE_DROP_MENU_DOORS,	state_create_drop_menu_doors);
+ds_map_add(stateFunctions, STATE_INPUT_DOOR_FLAG,	state_input_door_event_flag);
 
 // 
 nextState = state_default;
