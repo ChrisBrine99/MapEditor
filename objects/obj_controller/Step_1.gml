@@ -1,4 +1,15 @@
-// Loop through all buttons and flip their "highlighted" flags to zero. This saves on having to determine if
+// First, grab what cell the mouse is currently hovering over within the map itself. This value is simply a
+// conversion of the mouse's position within the "room" divided by a map tile's dimensions (8 by 8 pixels).
+mouseCellX = floor(mouse_x / TILE_WIDTH);
+mouseCellY = floor(mouse_y / TILE_HEIGHT);
+
+// On top of determining the cell the mouse is occupying, grab the mouse's position on the GUI layer, which 
+// has a resolution of 480 by 270; double that of the actual viewport's dimensions.
+mouseGuiX = floor(window_mouse_get_x() * guiScaleRatioX);
+mouseGuiY = floor(window_mouse_get_y() * guiScaleRatioY);
+
+
+/*// Loop through all buttons and flip their "highlighted" flags to zero. This saves on having to determine if
 // the mouse is actually still within the button's bounding box on each frame and instead just assumes no button
 // is being highlighted.
 var _length = ds_list_size(guiButtons);

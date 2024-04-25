@@ -1,0 +1,2 @@
+initialize_general(NO_FUNCTION, 80, 12, c_white, 1.0, BTN_ACTIVE | BTN_VISIBLE | BTN_LOCKED_SIZE | BTN_TEXT);
+initialize_text("This\nis a test to see if the text truncating\nworks if the button has a\nlocked size.", 1, c_ltgray, font_gui_small);

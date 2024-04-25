@@ -15,3 +15,7 @@ var _windowWidth	= WINDOW_WIDTH * WINDOW_SCALE;
 var _windowHeight	= WINDOW_HEIGHT * WINDOW_SCALE;
 window_set_position((display_get_width() - _windowWidth) >> 1, (display_get_height() - _windowHeight) >> 1);
 window_set_size(_windowWidth, _windowHeight);
+
+// 
+guiScaleRatioX = GUI_WIDTH / window_get_width();
+guiScaleRatioY = GUI_HEIGHT / window_get_height();

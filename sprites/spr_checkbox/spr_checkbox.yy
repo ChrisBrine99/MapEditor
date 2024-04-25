@@ -26,8 +26,8 @@
   "nineSlice":null,
   "origin":0,
   "parent":{
-    "name":"Graphics",
-    "path":"folders/Graphics.yy",
+    "name":"GUI",
+    "path":"folders/Graphics/GUI.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

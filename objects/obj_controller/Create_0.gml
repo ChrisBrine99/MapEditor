@@ -1,4 +1,20 @@
-#region "obj_controller" Specific Macro Initialization
+#region Local Variable Initialization
+
+// 
+camera			= noone;
+guiScaleRatioX	= 0.0;
+guiScaleRatioY	= 0.0;
+
+// 
+mouseCellX		= 0;
+mouseCellY		= 0;
+mouseGuiX		= 0;
+mouseGuiY		= 0;
+
+#endregion
+
+
+/*#region "obj_controller" Specific Macro Initialization
 
 // ------------------------------------------------------------------------------------------------------- //
 //	Bit flags that allow the controller object to have its substates toggled on or off as the program	   //
@@ -509,7 +525,7 @@ mouse_left_pressed_on_map = function(_tileID){
 			_icon	= icon;
 		}*/
 		//add_undo_command(update_map_tile, [_tileID, _border, _icon]);
-		update_map_tile(_tileID, selectedBorder, selectedIcon, selectedFlags);
+/*		update_map_tile(_tileID, selectedBorder, selectedIcon, selectedFlags);
 	}
 	update_tile_surface(_tileID);
 }
@@ -1097,7 +1113,7 @@ state_input_door_event_flag = function(){
 		
 		clear_selected_button();
 		return;
-	}*/
+	}
 }
 
 #endregion

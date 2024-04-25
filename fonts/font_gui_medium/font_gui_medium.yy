@@ -120,8 +120,8 @@
   "maintainGms1Font":false,
   "name":"font_gui_medium",
   "parent":{
-    "name":"Graphics",
-    "path":"folders/Graphics.yy",
+    "name":"Fonts",
+    "path":"folders/Graphics/Fonts.yy",
   },
   "pointRounding":0,
   "ranges":[

@@ -156,8 +156,8 @@
   "nineSlice":null,
   "origin":0,
   "parent":{
-    "name":"Graphics",
-    "path":"folders/Graphics.yy",
+    "name":"Sprites",
+    "path":"folders/Graphics/Sprites.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

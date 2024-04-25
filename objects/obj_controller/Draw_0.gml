@@ -1,4 +1,4 @@
-// Store the current position of the camera's viewport (The top-left position of the viewport relative to the 
+/*// Store the current position of the camera's viewport (The top-left position of the viewport relative to the 
 // room's coordinates), as well as the width and height of that viewport (The bottom-left position of the 
 // viewport relative to the room's coordinates) which are used throughout this Draw event.
 var _cameraX = camera_get_view_x(camera);

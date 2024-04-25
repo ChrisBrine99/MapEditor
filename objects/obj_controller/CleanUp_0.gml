@@ -1,4 +1,4 @@
-ds_map_destroy(stateFunctions);
+/*ds_map_destroy(stateFunctions);
 //ds_list_destroy(redoCommands);
 ds_list_destroy(tileData);
 camera_destroy(camera);

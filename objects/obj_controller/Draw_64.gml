@@ -1,4 +1,14 @@
-// 
+draw_set_font(font_gui_small);
+draw_set_color(c_white);
+draw_set_halign(fa_right);
+draw_set_valign(fa_bottom);
+draw_text(GUI_WIDTH - 2, GUI_HEIGHT - 1, 
+	"(" + string(mouse_x) + " [" + string(mouseCellX) + "], "
+		+ string(mouse_y) + " [" + string(mouseCellY) + "])");
+draw_set_halign(fa_left);
+draw_set_valign(fa_top);
+
+/*// 
 draw_sprite_ext(spr_rectangle, 0, 0, 0, 100, GUI_HEIGHT, 0, c_black, 0.75);
 draw_sprite_ext(spr_rectangle, 0, 100, 0, 1, GUI_HEIGHT - 13, 0, c_white, 1.0);
 draw_sprite_ext(spr_rectangle, 0, 100, GUI_HEIGHT - 12, GUI_WIDTH, 12, 0, c_black, 0.75);

@@ -1,4 +1,4 @@
-#region General Macros
+/*#region General Macros
 
 // ------------------------------------------------------------------------------------------------------- //
 //	Store window dimensions and scaling factor in macros so they can be easily auto-filled instead of	   //
